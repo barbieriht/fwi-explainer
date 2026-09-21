@@ -82,8 +82,8 @@ node scripts/build-page.js --check  # fail if out of date (also a test)
 - `import-literature.js` copies bibliographic fields only (the .bib's working
   comments are never read), marks entries with a `% VERIFY` note as not yet
   verified, and derives topic tags from titles with explicit keyword rules.
-  It writes `assets/data/literature.json` and a `literature.js` twin, so the
-  page also works when opened from disk.
+  It writes `assets/data/literature.json`, which `build-page.js` reads, so
+  the published page needs no runtime data file for the literature.
 - In both pages, prose is hand-written. Lists of papers are written as
   `<span class="cite-list" data-cite-list="tag=uncertainty">` and inline
   citations as `<a class="cite" data-cite="id">`. `build-page.js` fills
@@ -104,8 +104,9 @@ python3 scripts/import-zotero.py /tmp/zotero-copy.sqlite --collection Seismic
 ```
 
 Reads the collection and its sub-collections (except `Removed`), removes
-duplicates by DOI or title, and assigns topics by keyword rules on title and
-abstract. Only aggregate counts are written, to
+duplicates by DOI or title, and flags studies that mention machine learning
+or deep learning with a keyword rule on title and abstract. Only aggregate
+counts are written, to
 `assets/data/search-snapshot.{json,js}`; no per-study field is published.
 
 ### Curated readings
