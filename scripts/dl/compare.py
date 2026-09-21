@@ -1,4 +1,4 @@
-"""Build the classical-vs-deep-learning comparison shown on deep-learning.html.
+"""Build the classical-vs-deep-learning comparison shown in the deep-learning section of index.html.
 
 For each case (the held-out test model with the most velocity variation, and a
 hand-made model unlike anything in the training set) it runs:

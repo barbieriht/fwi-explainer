@@ -6,38 +6,371 @@
   <title>FWI Explainer</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M2 16 Q6 4 10 16 T18 16 T26 16 T30 16%27 fill=%27none%27 stroke=%27%231f5fa8%27 stroke-width=%273%27/%3E%3C/svg%3E">
   <meta name="description" content="Interactive, in-browser explainer of seismic Full-Waveform Inversion and deep-learning approaches to it.">
+  <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/layout.css">
 </head>
 <body>
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="site-header">
-    <nav class="site-nav" aria-label="Main">
-      <a class="brand" href="index.html">FWI Explainer</a>
+    <nav class="site-nav" aria-label="Sections">
+      <a class="brand" href="#top">FWI Explainer</a>
       <ul>
-        <li><a href="forward-modeling.html">Forward Modeling</a></li>
-        <li><a href="inverse-problem.html">Inverse Problem</a></li>
-        <li><a href="deep-learning.html">Deep Learning</a></li>
-        <li><a href="research-landscape.html">Research Landscape</a></li>
-        <li><a href="open-problems.html">Open Problems</a></li>
-        <li><a href="references.html">References</a></li>
+        <li><a href="#forward-modeling">Forward modeling</a></li>
+        <li><a href="#inverse-problem">The inverse problem</a></li>
+        <li><a href="#deep-learning">Enter deep learning</a></li>
+        <li><a href="#research-landscape">Research landscape</a></li>
+        <li><a href="#open-problems">Open problems</a></li>
+        <li><a href="#references">References</a></li>
       </ul>
     </nav>
   </header>
   <main id="content">
+    <div id="top"></div>
     <h1>Full-Waveform Inversion, explained interactively</h1>
-    <p class="lede">Full-Waveform Inversion (FWI) recovers a map of the subsurface by fitting simulated seismic waves to recorded ones. It is powerful and notoriously hard to get right. This site walks through why, with live simulations running in your browser.</p>
-    <ol class="module-list">
-      <li><a href="forward-modeling.html">Forward Modeling<span>The physics of a seismic wave</span></a></li>
-      <li><a href="inverse-problem.html">The Inverse Problem<span>Why FWI is hard</span></a></li>
-      <li><a href="deep-learning.html">Enter Deep Learning<span>Learned inversion</span></a></li>
-      <li><a href="research-landscape.html">Research Landscape<span>Mapping the field</span></a></li>
-      <li><a href="open-problems.html">Open Problems<span>Where the field is headed</span></a></li>
-      <li><a href="references.html">References<span>Every source cited on this site</span></a></li>
-    </ol>
+    <p class="lede">Full-Waveform Inversion (FWI) recovers a map of the subsurface by fitting simulated seismic waves to recorded ones. It is powerful and notoriously hard to get right. The sections below walk through why, with live simulations running in your browser. Open any section to read it.</p>
+    <div class="section-tools">
+      <button type="button" data-sections="expand">Expand all</button>
+      <button type="button" data-sections="collapse">Collapse all</button>
+    </div>
+    <details class="section" id="forward-modeling">
+      <summary><h2 class="section-title">Forward modeling</h2><span class="section-sub">The physics of a seismic wave</span></summary>
+      <div class="section-body">
+        <p class="lede">Inverting seismic data first requires predicting it. Given a map of how fast sound travels underground, what does a wave from a surface source look like by the time it reaches the sensors?</p>
+
+        <h3>Velocity models, sources and receivers</h3>
+        <p>A <strong>velocity model</strong> is a map of the subsurface where each cell stores how fast a pressure wave travels there, in metres per second. Soft sediments are slow; compacted rock is fast. Where velocity changes abruptly, part of the wave's energy reflects back toward the surface.</p>
+        <p>In a seismic survey, a <strong>source</strong> (an air gun offshore, a vibrator truck on land) sends a short pulse into the ground, and a line of <strong>receivers</strong> records pressure over time. Plotting every receiver's recording side by side, time increasing downward, gives a <strong>shot gather</strong>: the raw data that FWI tries to explain.</p>
+
+        <h3>The acoustic wave equation</h3>
+        <p>For a medium with constant density, the pressure field \(p(\mathbf{x}, t)\) obeys</p>
+        \[ \frac{\partial^2 p}{\partial t^2} = v(\mathbf{x})^2\, \nabla^2 p + s(\mathbf{x}, t), \]
+        <p>where \(v(\mathbf{x})\) is the velocity model and \(s\) is the source term. Simulating data from a known model this way is called <strong>forward modeling</strong>.</p>
+
+        <section class="demo wide" id="forward-demo" aria-labelledby="fm-demo-title">
+          <h4 id="fm-demo-title">Try it: propagate a wave through your own model</h4>
+          <div class="demo-panels">
+            <figure>
+              <canvas data-role="model" role="img"
+                aria-label="Velocity model with the wavefield drawn on top"
+                aria-describedby="fm-model-desc"></canvas>
+              <figcaption id="fm-model-desc">Velocity model (1 km × 1 km, light = slow, dark = fast) with the pressure wavefield overlaid in red (positive) and blue (negative). The orange triangle is the source; the small dark squares along the top are receivers.</figcaption>
+              <div class="axis-label" aria-hidden="true"><span>1500 m/s</span><span>4500 m/s</span></div>
+              <div class="legend-bar" aria-hidden="true"></div>
+            </figure>
+            <figure>
+              <canvas data-role="gather" role="img"
+                aria-label="Shot gather recorded by the receivers"
+                aria-describedby="fm-gather-desc"></canvas>
+              <figcaption id="fm-gather-desc">Shot gather: one column per receiver (left to right across the surface), time running downward from 0 to 1 s. The first steep arrival is the direct wave; curved events below it are reflections. Amplitudes get a display-only gain with time.</figcaption>
+            </figure>
+          </div>
+
+          <div class="controls">
+            <label class="control"><span class="label">Model preset</span>
+              <select data-role="preset">
+                <option value="layered" selected>Three layers</option>
+                <option value="anomaly">Circular anomaly</option>
+                <option value="dipping">Dipping interface</option>
+                <option value="homogeneous">Homogeneous</option>
+              </select>
+            </label>
+            <fieldset>
+              <legend>Clicking the model</legend>
+              <label><input type="radio" name="fm-mode" value="source" checked> places the source</label>
+              <label><input type="radio" name="fm-mode" value="paint"> paints velocity</label>
+            </fieldset>
+            <label class="control"><span class="label">Brush velocity: <span data-role="brush-value"></span></span>
+              <input type="range" data-role="brush" step="100">
+            </label>
+            <label class="control"><span class="label">Speed</span>
+              <select data-role="speed">
+                <option value="2">Slow</option>
+                <option value="5" selected>Normal</option>
+                <option value="12">Fast</option>
+              </select>
+            </label>
+            <div class="button-row">
+              <button type="button" class="primary" data-role="play" aria-pressed="false">Play</button>
+              <button type="button" data-role="step">Step</button>
+              <button type="button" data-role="reset">Reset</button>
+            </div>
+          </div>
+          <p class="demo-status"><span data-role="clock"></span> · <span data-role="status" aria-live="polite">Press Play to fire the source.</span></p>
+        </section>
+
+        <h3>What to look for</h3>
+        <ul>
+          <li>In the three-layer model, each interface sends a reflection back up. In the gather these show up as curved events (hyperbolas) that arrive later for deeper interfaces.</li>
+          <li>Once the wave enters a faster layer its wavefront spreads out faster, which also bends (refracts) its direction of travel.</li>
+          <li>A compact anomaly scatters energy in every direction. Its signature in the gather is a diffraction curve centred above it.</li>
+          <li>Try painting a slow, low-velocity zone and compare how much later its reflections arrive.</li>
+        </ul>
+
+        <h3>How the simulation works</h3>
+        <p>The browser solves the wave equation on a 100 × 100 grid of 10 m cells with the finite-difference time-domain method. Derivatives become weighted differences between neighbouring cells, and the field is advanced one small time step \(\Delta t\) at a time:</p>
+        \[ p^{n+1}_{i,j} = 2p^{n}_{i,j} - p^{n-1}_{i,j} + v_{i,j}^2\,\Delta t^2\, \big(\nabla_h^2 p^{n}\big)_{i,j} + \Delta t^2\, s^{n}_{i,j}, \]
+        <p>where \(\nabla_h^2\) is a fourth-order accurate discrete Laplacian. The time step must satisfy a stability (CFL) condition, \(v_{\max}\,\Delta t / \Delta x \le C\), otherwise errors grow exponentially. Here \(\Delta t\) is fixed for the fastest velocity you can paint, so edits can never make the simulation unstable. The source is a Ricker wavelet with a 15 Hz peak frequency. A damping "sponge" layer around the grid absorbs waves that leave it, which mimics an unbounded medium <a class="cite" href="#cerjan1985" data-cite="cerjan1985">(Cerjan et al., 1985)</a>. It is imperfect: a faint residual reflection of about 3% remains.</p>
+        <p class="note">Adapted from standard finite-difference time-domain formulations of the acoustic wave equation.</p>
+
+        <p>Forward modeling answers "what data would this model produce?" The next module asks the harder question in reverse: <a href="#inverse-problem">given recorded data, what model produced it?</a></p>
+      </div>
+    </details>
+    <details class="section" id="inverse-problem">
+      <summary><h2 class="section-title">The inverse problem</h2><span class="section-sub">Why FWI is hard</span></summary>
+      <div class="section-body">
+        <p class="lede">Forward modeling turns a velocity model into data. Full-waveform inversion runs the other way: it starts from recorded data and searches for the model that would have produced it <a class="cite" href="#tarantola1984" data-cite="tarantola1984">(Tarantola, 1984)</a>.</p>
+
+        <h3>Inversion as optimization</h3>
+        <p>FWI treats the velocity in every grid cell as an unknown. For a model \(\mathbf{m}\), every shot is simulated, and a least-squares <strong>misfit</strong> measures how far the synthetic seismograms are from the observed ones:</p>
+        \[ J(\mathbf{m}) = \frac{1}{2} \sum_{\text{shots}} \sum_{\text{receivers}} \int_0^T \big( d_{\text{syn}}(t; \mathbf{m}) - d_{\text{obs}}(t) \big)^2 \, dt. \]
+        <p>The demos below already have 3,600 unknowns (a 60 × 60 grid), and realistic 3D models have vastly more. Searching that space directly is hopeless, so FWI improves the model iteratively with local, gradient-based optimization <a class="cite" href="#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>:</p>
+        \[ \mathbf{m}_{k+1} = \mathbf{m}_k - \alpha_k \, \nabla J(\mathbf{m}_k). \]
+
+        <h3>Getting the gradient cheaply: the adjoint-state method</h3>
+        <p>Perturbing each cell one at a time to estimate \(\nabla J\) would take one simulation per unknown. The adjoint-state method gets the whole gradient from just two simulations per shot. The first is the ordinary forward simulation \(p\). The second, the adjoint field \(\lambda\), is driven by the data residuals injected at the receivers and run backward in time. Correlating the two gives the gradient with respect to slowness squared, \(m = 1/v^2\) <a class="cite" href="#plessix2006" data-cite="plessix2006">(Plessix, 2006)</a>:</p>
+        \[ \frac{\partial J}{\partial m(\mathbf{x})} = -\int_0^T \lambda(\mathbf{x}, t)\, \frac{\partial^2 p}{\partial t^2}(\mathbf{x}, t)\, dt. \]
+        <p>This site's test suite checks the in-browser implementation against brute-force finite-difference perturbations. The two agree to within 0.2%.</p>
+        <p class="note">Adapted from standard adjoint-state formulations of the acoustic wave equation.</p>
+
+        <h3>Why it is hard: non-convexity and cycle-skipping</h3>
+        <p>The misfit is not a nice bowl. Seismic waveforms oscillate, so comparing them sample by sample rewards any alignment of peaks with peaks, including the wrong ones. If the starting model predicts an arrival more than <em>half a period</em> away from the observed one, gradient descent pulls it toward the neighbouring wiggle instead of the correct one. This is called <strong>cycle-skipping</strong> <a class="cite" href="#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>:</p>
+        \[ |\Delta t| > \frac{1}{2f} \quad\Rightarrow\quad \text{the nearest local minimum is the wrong one.} \]
+        <p>Low frequencies have long periods, so they tolerate larger timing errors. Real recordings, however, often contain little usable low-frequency energy <a class="cite" href="#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>. The problem is also <strong>ill-posed</strong>: sources and receivers only illuminate parts of the subsurface, so different models can fit the same data almost equally well.</p>
+
+        <p>Both demos use a <strong>crosswell</strong> layout by default: six sources down the left side of the model, thirty receivers down the right side. The true model is a 2000 m/s background with a faster (2400 m/s) circular body in the middle. The inversion demo can also add sources and receivers along the top and bottom.</p>
+
+        <section class="demo wide" id="misfit-landscape" aria-labelledby="ml-title">
+          <h4 id="ml-title">Try it: the misfit landscape</h4>
+          <p>Here the "model" is a single number: the velocity of a homogeneous starting guess. For each guess, the middle shot is simulated and its misfit against the observed data is computed, with a 4 Hz and a 12 Hz source.</p>
+          <div class="demo-panels even">
+            <figure>
+              <div data-role="landscape-chart"></div>
+              <ul class="chart-legend"><li class="series-a"><span>4 Hz data</span></li><li class="series-b"><span>12 Hz data</span></li></ul>
+              <figcaption>Misfit versus starting velocity (each curve divided by its maximum). The 12 Hz curve has side valleys: local minima where gradient descent can get stuck.</figcaption>
+            </figure>
+            <figure>
+              <div data-role="trace-chart"></div>
+              <ul class="chart-legend"><li class="series-a"><span>observed</span></li><li class="series-b dashed"><span>modeled from your guess</span></li></ul>
+              <figcaption>Recording at the receiver facing the middle source.</figcaption>
+            </figure>
+          </div>
+          <div class="controls">
+            <label class="control"><span class="label">Starting velocity: <span data-role="v0-value"></span></span>
+              <input type="range" data-role="v0">
+            </label>
+            <fieldset>
+              <legend>Trace frequency</legend>
+              <label><input type="radio" name="ml-freq" value="4"> 4 Hz</label>
+              <label><input type="radio" name="ml-freq" value="12" checked> 12 Hz</label>
+            </fieldset>
+            <button type="button" data-role="start">Compute landscape</button>
+          </div>
+          <p class="demo-readout" data-role="readout" aria-live="polite"></p>
+          <p class="demo-status" data-role="status">The landscape is computed when this section scrolls into view (about 50 small simulations).</p>
+        </section>
+
+        <section class="demo wide" id="inversion-demo" aria-labelledby="inv-title">
+          <h4 id="inv-title">Try it: run FWI from a wrong starting model</h4>
+          <div class="scenario-row" role="group" aria-label="Scenarios">
+            <button type="button" data-scenario="good">Good start (2000 m/s, 12 Hz)</button>
+            <button type="button" data-scenario="skipped">Cycle-skipped (1700 m/s, 12 Hz)</button>
+            <button type="button" data-scenario="multiscale">Fix 1: low → high frequency (1700 m/s)</button>
+            <button type="button" data-scenario="surround">Fix 2: sources and receivers on all sides (1700 m/s, 12 Hz)</button>
+          </div>
+          <div class="demo-panels models">
+            <figure>
+              <canvas data-role="truth" role="img" aria-label="True velocity model" aria-describedby="inv-truth-desc"></canvas>
+              <figcaption id="inv-truth-desc">True model (used only to generate the observed data). Orange circles: sources; dark squares: receivers.</figcaption>
+            </figure>
+            <figure>
+              <canvas data-role="current" role="img" aria-label="Current inverted velocity model" aria-describedby="inv-current-desc"></canvas>
+              <figcaption id="inv-current-desc">Current estimate, updated after every iteration. Same colour scale as the true model.</figcaption>
+            </figure>
+          </div>
+          <div class="axis-label narrow" aria-hidden="true"><span>1500 m/s</span><span>3000 m/s</span></div>
+          <div class="legend-bar narrow" aria-hidden="true"></div>
+          <figure class="chart-block">
+            <div data-role="misfit-chart"></div>
+            <figcaption>Misfit relative to its value at the start of each frequency band. In the low → high run it jumps back to 1 at the switch, because it is measured on different data from then on.</figcaption>
+          </figure>
+          <div class="controls">
+            <label class="control"><span class="label">Starting velocity: <span data-role="v0-value"></span></span>
+              <input type="range" data-role="v0">
+            </label>
+            <fieldset>
+              <legend>Data used</legend>
+              <label><input type="radio" name="inv-band" value="low"> 4 Hz only</label>
+              <label><input type="radio" name="inv-band" value="high" checked> 12 Hz only</label>
+              <label><input type="radio" name="inv-band" value="multi"> 4 Hz, then 12 Hz</label>
+            </fieldset>
+            <fieldset>
+              <legend>Sources and receivers</legend>
+              <label><input type="radio" name="inv-geometry" value="crosswell" checked> left and right</label>
+              <label><input type="radio" name="inv-geometry" value="surround"> all four sides</label>
+            </fieldset>
+            <div class="button-row">
+              <button type="button" class="primary" data-role="run" aria-pressed="false">Run</button>
+              <button type="button" data-role="step">One iteration</button>
+              <button type="button" data-role="reset">Reset</button>
+            </div>
+          </div>
+          <p class="demo-status"><span data-role="progress"></span> · <span data-role="status" aria-live="polite"></span></p>
+        </section>
+
+        <h3>What to look for</h3>
+        <ul>
+          <li><strong>Good start:</strong> the background is already right, the misfit falls steadily, and the fast body appears in the right place. It is smeared horizontally: with sources on one side and receivers on the other, most waves cross it left to right, which constrains its width poorly.</li>
+          <li><strong>Cycle-skipped:</strong> starting 15% too slow, the 12 Hz misfit stalls well above zero. The estimate fills with stripes and velocities hit the allowed limits. It is fitting the wrong wiggles.</li>
+          <li><strong>Fix 1, low → high frequency:</strong> from the same bad start, the 4 Hz stage first corrects the smooth background, which brings arrivals within half a 12 Hz period. The 12 Hz stage then sharpens the fast body. Moving from low to high frequencies is a classic remedy for cycle-skipping <a class="cite" href="#bunks1995" data-cite="bunks1995">(Bunks et al., 1995)</a>.</li>
+          <li><strong>Fix 2, sources and receivers on all sides:</strong> still starting 15% too slow and using only 12 Hz data. The added short source–receiver distances along the top and bottom have arrival errors below half a period, so they pull the background toward the right value first, and the longer paths follow. In this demo, a start that is too <em>fast</em> (2500 m/s) still cycle-skips with this layout.</li>
+        </ul>
+        <p class="note">Simplifications: the observed data come from the same solver and grid used for inversion, with no noise. Real data are noisier and never match the physics exactly, which makes every one of these problems harder.</p>
+
+        <p>Iterative FWI solves a new optimization problem for every survey and depends on a good starting model. The next module looks at methods that <a href="#deep-learning">learn the mapping from data to model instead</a>.</p>
+      </div>
+    </details>
+    <details class="section" id="deep-learning">
+      <summary><h2 class="section-title">Enter deep learning</h2><span class="section-sub">Learned inversion</span></summary>
+      <div class="section-body">
+        <p class="lede">Iterative FWI solves a new optimization problem for every survey, and it needs a good starting model to avoid cycle-skipping. Learned inversion takes a different route: train a neural network once on many pairs of seismic data and velocity models. After that, inverting new data takes a single forward pass.</p>
+
+        <h3>From optimization to a learned mapping</h3>
+        <p>Classical FWI searches for the model that explains one dataset:</p>
+        \[ \mathbf{m}^\star = \arg\min_{\mathbf{m}} J(\mathbf{m}; \mathbf{d}_{\text{obs}}). \]
+        <p>A learned approach instead fits the parameters \(\theta\) of a network \(f_\theta\) that maps data to models, using a training set of simulated examples \((\mathbf{d}_i, \mathbf{m}_i)\):</p>
+        \[ \theta^\star = \arg\min_{\theta} \sum_i \big\lVert f_{\theta}(\mathbf{d}_i) - \mathbf{m}_i \big\rVert_1, \qquad \hat{\mathbf{m}} = f_{\theta^\star}(\mathbf{d}_{\text{obs}}). \]
+        <p>The expensive part moves from inference time to training time, and the physics enters only through the examples. That trade-off shapes everything below.</p>
+
+        <h3>A small experiment</h3>
+        <p>To make the comparison concrete, a network was trained specifically for this site. Five surface sources and 64 receivers record a 640 m × 640 m model at <span data-fill="f0_hz"></span> Hz. The <span data-fill="train_size" data-format="thousands"></span> training models come from a random generator of curved layers, faults and intrusions. The network is a small convolutional encoder–decoder. Simulating the training data took about 10 minutes and training about 13 minutes, both on a laptop GPU. The classical baseline is FWI run through the same simulator. It starts from a smooth 1D model (the average depth profile of the training models) and works from low to high frequencies.</p>
+
+        <section class="demo wide" id="dl-comparison" aria-labelledby="dl-title">
+          <h4 id="dl-title">Compare: classical FWI and deep learning</h4>
+          <div class="scenario-row" role="group" aria-label="Test case">
+            <button type="button" data-case="in-distribution" aria-pressed="true">Test model like the training data</button>
+            <button type="button" data-case="out-of-distribution" aria-pressed="false">Unfamiliar geology</button>
+          </div>
+          <div class="dl-layout">
+            <figure class="dl-slider">
+              <div class="dl-stage">
+                <img data-role="right-img" alt="" width="256" height="256">
+                <img data-role="left-img" alt="" width="256" height="256" class="dl-overlay">
+                <div class="dl-divider" data-role="divider" aria-hidden="true"></div>
+                <span class="dl-tag dl-tag-left" data-role="left-tag"></span>
+                <span class="dl-tag dl-tag-right" data-role="right-tag"></span>
+              </div>
+              <label class="control"><span class="label">Drag to compare</span>
+                <input type="range" data-role="position" min="0" max="100" value="50">
+              </label>
+            </figure>
+            <figure class="dl-truth">
+              <img data-role="truth-img" alt="True velocity model" width="256" height="256">
+              <figcaption>True model</figcaption>
+              <div class="axis-label" aria-hidden="true"><span>1500 m/s</span><span>4500 m/s</span></div>
+              <div class="legend-bar" aria-hidden="true"></div>
+            </figure>
+          </div>
+          <div class="controls">
+            <label class="control"><span class="label">Left image</span>
+              <select data-role="left">
+                <option value="fwi" selected>Classical FWI</option>
+                <option value="start">Starting model</option>
+                <option value="dl">Deep learning</option>
+                <option value="true">True model</option>
+              </select>
+            </label>
+            <label class="control"><span class="label">Right image</span>
+              <select data-role="right">
+                <option value="dl" selected>Deep learning</option>
+                <option value="fwi">Classical FWI</option>
+                <option value="true">True model</option>
+                <option value="start">Starting model</option>
+              </select>
+            </label>
+          </div>
+          <table class="metrics">
+            <caption>Mean absolute velocity error against the true model, and compute time on a laptop GPU (RTX 3050).</caption>
+            <thead><tr><th scope="col">Method</th><th scope="col">Error</th><th scope="col">Time</th></tr></thead>
+            <tbody data-role="metrics"></tbody>
+          </table>
+          <p class="demo-status" data-role="status"></p>
+        </section>
+
+        <h3>What the comparison shows</h3>
+        <ul>
+          <li><strong>Speed.</strong> Once trained, the network inverts a dataset in about <span data-fill="cases.in-distribution.seconds.dl" data-format="ms"></span>. The classical FWI run takes about <span data-fill="cases.in-distribution.seconds.fwi" data-format="minutes"></span> on the same GPU. The cost has moved rather than vanished: the training set and the training run would have to be redone for a different survey layout or frequency band.</li>
+          <li><strong>Familiar geology.</strong> On models like its training data, the network is accurate: its average error over <span data-fill="test_size"></span> held-out test models is <span data-fill="dl_test_set_mae_mps" data-format="mps"></span>. On the example shown, the two methods land close together (<span data-fill="cases.in-distribution.mae_mps.fwi" data-format="mps"></span> for FWI, <span data-fill="cases.in-distribution.mae_mps.dl" data-format="mps"></span> for the network). The network's model is smoother, and it misses the small body near the bottom right.</li>
+          <li><strong>Unfamiliar geology.</strong> The second model has steep, curved layers and a slow lens, features the generator never produces. FWI still recovers the lens and the shape of the layers (<span data-fill="cases.out-of-distribution.mae_mps.fwi" data-format="mps"></span>), because it fits this particular dataset through the physics. The network returns a plausible-looking layered model with no lens at all (<span data-fill="cases.out-of-distribution.mae_mps.dl" data-format="mps"></span>). It can only reproduce the kinds of structure it was trained on.</li>
+        </ul>
+        <p class="note">This is one small experiment on synthetic, noise-free data. It illustrates the trade-off; it does not rank methods. The test example was chosen by a fixed rule (the test model with the largest velocity variation), not by how either method performed on it. Code: <code>scripts/dl/</code> in the repository.</p>
+
+        <h3>Technique families in the literature</h3>
+        <p class="placeholder">Pending: this section will survey the technique families in the author's literature corpus (CNN encoder–decoders, physics-informed networks, self-supervised approaches, neural representations, multiparameter inversion and uncertainty quantification), with citations drawn from the corpus.</p>
+
+        <p>Where is the field heading? The <a href="#open-problems">open problems</a> page collects the gaps these methods still leave.</p>
+      </div>
+    </details>
+    <details class="section" id="research-landscape">
+      <summary><h2 class="section-title">Research landscape</h2><span class="section-sub">Mapping the field</span></summary>
+      <div class="section-body">
+        <p class="placeholder">This module is under construction.</p>
+      </div>
+    </details>
+    <details class="section" id="open-problems">
+      <summary><h2 class="section-title">Open problems</h2><span class="section-sub">Where the field is headed</span></summary>
+      <div class="section-body">
+        <p class="placeholder">This module is under construction.</p>
+      </div>
+    </details>
+    <details class="section" id="references">
+      <summary><h2 class="section-title">References</h2><span class="section-sub">Every source cited on this page</span></summary>
+      <div class="section-body">
+        <p class="lede">Every source cited on this site, generated automatically from the citations used on each page.</p>
+        <!-- references:start (generated by scripts/build-references.js; do not edit) -->
+        <ol class="bibliography">
+          <li id="bunks1995">
+            Bunks, C., Saleck, F. M., Zaleski, S., Chavent, G. (1995). Multiscale seismic waveform inversion. <em>Geophysics</em> 60(5), 1457–1473. <a href="https://doi.org/10.1190/1.1443880">doi:10.1190/1.1443880</a>
+            <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a></span>
+          </li>
+          <li id="cerjan1985">
+            Cerjan, C., Kosloff, D., Kosloff, R., Reshef, M. (1985). A nonreflecting boundary condition for discrete acoustic and elastic wave equations. <em>Geophysics</em> 50(4), 705–708. <a href="https://doi.org/10.1190/1.1441945">doi:10.1190/1.1441945</a>
+            <span class="cited-on">Cited in: <a href="#forward-modeling">Forward modeling</a></span>
+          </li>
+          <li id="plessix2006">
+            Plessix, R.-E. (2006). A review of the adjoint-state method for computing the gradient of a functional with geophysical applications. <em>Geophysical Journal International</em> 167(2), 495–503. <a href="https://doi.org/10.1111/j.1365-246X.2006.02978.x">doi:10.1111/j.1365-246X.2006.02978.x</a>
+            <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a></span>
+          </li>
+          <li id="tarantola1984">
+            Tarantola, A. (1984). Inversion of seismic reflection data in the acoustic approximation. <em>Geophysics</em> 49(8), 1259–1266. <a href="https://doi.org/10.1190/1.1441754">doi:10.1190/1.1441754</a>
+            <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a></span>
+          </li>
+          <li id="virieux2009">
+            Virieux, J., Operto, S. (2009). An overview of full-waveform inversion in exploration geophysics. <em>Geophysics</em> 74(6), WCC1–WCC26. <a href="https://doi.org/10.1190/1.3238367">doi:10.1190/1.3238367</a>
+            <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a></span>
+          </li>
+        </ol>
+        <!-- references:end -->
+      </div>
+    </details>
   </main>
   <footer class="site-footer">
     <p>Built by Thiago Barbieri as part of ongoing PhD research in AI at the University of São Paulo (USP). <a href="https://github.com/barbieriht">GitHub</a> · <a href="https://www.linkedin.com/in/barbieriht/">LinkedIn</a></p>
   </footer>
+  <script src="assets/vendor/katex/katex.min.js" defer></script>
+  <script src="assets/vendor/katex/auto-render.min.js" defer></script>
+  <script src="assets/vendor/d3/d3.min.js" defer></script>
+  <script src="assets/js/math.js" defer></script>
+  <script src="assets/js/sections.js" defer></script>
+  <script src="assets/js/solver.js" defer></script>
+  <script src="assets/js/inversion.js" defer></script>
+  <script src="assets/js/colormap.js" defer></script>
+  <script src="assets/js/charts.js" defer></script>
+  <script src="assets/js/forward-demo.js" defer></script>
+  <script src="assets/js/inverse-setup.js" defer></script>
+  <script src="assets/js/inverse-landscape.js" defer></script>
+  <script src="assets/js/inverse-demo.js" defer></script>
+  <script src="assets/data/dl-comparison.js" defer></script>
+  <script src="assets/js/dl-demo.js" defer></script>
 </body>
 </html>

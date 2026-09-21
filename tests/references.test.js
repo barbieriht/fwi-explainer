@@ -12,7 +12,7 @@ test('every citation on the site resolves to a reference entry', () => {
   assert.deepEqual(missing, []);
 });
 
-test('references.html is up to date with the citations used', () => {
-  const current = fs.readFileSync(path.join(__dirname, '..', 'references.html'), 'utf8');
+test('the bibliography in index.html is up to date with the citations used', () => {
+  const current = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   assert.equal(render(), current, 'run: node scripts/build-references.js');
 });

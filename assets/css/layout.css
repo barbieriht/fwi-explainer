@@ -143,3 +143,39 @@ h2 { margin-top: 2em; line-height: 1.25; }
 .metrics { border-collapse: collapse; margin-top: 16px; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
 .metrics caption { text-align: left; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
 .metrics th, .metrics td { text-align: left; padding: 6px 16px 6px 0; border-bottom: 1px solid var(--border); }
+
+/* Single-page layout: collapsible sections */
+html { scroll-padding-top: 12px; }
+main > details.section, main > .section-tools { max-width: none; }
+.section-tools { display: flex; gap: 8px; margin: 8px 0 20px; }
+.section-tools button {
+  font: inherit; font-size: 0.9rem; padding: 4px 12px; border-radius: 4px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-muted);
+}
+details.section {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); margin: 12px 0;
+}
+details.section > summary {
+  list-style: none; cursor: pointer; padding: 14px 44px 14px 16px; position: relative;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px;
+}
+details.section > summary::-webkit-details-marker { display: none; }
+details.section > summary::after {
+  content: ""; position: absolute; right: 18px; top: 50%; width: 9px; height: 9px;
+  border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted);
+  transform: translateY(-70%) rotate(45deg); transition: transform 0.15s;
+}
+details.section[open] > summary::after { transform: translateY(-30%) rotate(-135deg); }
+details.section > summary:hover .section-title { color: var(--accent); }
+details.section > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius); }
+.section-title { margin: 0; font-size: 1.25rem; line-height: 1.3; }
+.section-sub { color: var(--text-muted); font-size: 0.95rem; }
+.section-body { padding: 0 16px 24px; border-top: 1px solid var(--border); }
+.section-body > * { max-width: var(--measure); }
+.section-body > .wide { max-width: none; }
+.section-body .demo { background: var(--bg); }
+.section-body .lede { margin-top: 16px; }
+@media (prefers-reduced-motion: reduce) { details.section > summary::after { transition: none; } }
+/* On phones the section cards already act as the navigation. */
+@media (max-width: 600px) { .site-nav ul { display: none; } }

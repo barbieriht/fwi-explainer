@@ -4,6 +4,12 @@ An interactive, in-browser explainer of seismic Full-Waveform Inversion (FWI)
 and deep-learning approaches to it. Everything runs client-side; the site is
 plain HTML/CSS/JS with no build step and no network requests at runtime.
 
+It is a single page (`index.html`) with collapsible sections: forward
+modeling, the inverse problem, deep learning, research landscape, open
+problems and references. Each interactive demo starts only when its section
+is opened, and any section or reference can be linked directly
+(e.g. `index.html#inverse-problem`).
+
 > Status: in progress. Forward Modeling, The Inverse Problem and the Deep Learning comparison are live; the literature-driven modules are next.
 
 ## Run locally
@@ -26,12 +32,12 @@ finite differences to within 1%). No dependencies to install; Node 18+.
 
 ## Content pipeline
 
-Citations in the pages are links with a `data-cite="id"` attribute. The
-References page is generated from them and from the reference data in
-`assets/data/`:
+Citations are links with a `data-cite="id"` attribute. The References
+section is generated from them and from the reference data in `assets/data/`,
+noting which section cites each entry:
 
 ```sh
-node scripts/build-references.js          # regenerate references.html
+node scripts/build-references.js          # regenerate the bibliography in index.html
 node scripts/build-references.js --check  # fail if it is out of date
 ```
 
@@ -42,7 +48,7 @@ that is not in the data.
 
 ## Deep-learning comparison (offline)
 
-The Deep Learning page shows one pre-computed comparison between classical FWI
+The deep-learning section shows one pre-computed comparison between classical FWI
 and a trained network. Everything is generated locally with PyTorch on a
 consumer GPU; no cloud services are involved. Outputs that are committed:
 `assets/img/dl/*.png` and `assets/data/dl-comparison.{json,js}`.
