@@ -1,6 +1,10 @@
-/* Design tokens. Light is the default; dark follows the OS setting. */
+/*
+ * Design tokens. Light is the default; dark follows the OS setting unless the
+ * reader picked a theme with the header toggle, which sets
+ * <html data-theme="light|dark"> (see assets/js/theme.js).
+ */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --bg: #fbfaf7;
   --surface: #ffffff;
   --text: #1c1f24;
@@ -21,8 +25,11 @@
   --radius: 6px;
 }
 
+/* The dark palette appears twice: once for the OS preference (unless the
+   reader forced light) and once for an explicit dark choice. Keep in sync. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg: #121418;
     --surface: #1b1e24;
     --text: #e6e8eb;
@@ -36,4 +43,20 @@
     --series-b: #f0915a;
     --chart-grid: #2a2f37;
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121418;
+  --surface: #1b1e24;
+  --text: #e6e8eb;
+  --text-muted: #a3a9b3;
+  --border: #343a44;
+  --accent: #7fb2ec;
+  --accent-contrast: #121418;
+  --warn-bg: #3a2f10;
+  --warn-text: #f3dc9b;
+  --series-a: #7fb2ec;
+  --series-b: #f0915a;
+  --chart-grid: #2a2f37;
 }

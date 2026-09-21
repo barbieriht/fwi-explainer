@@ -24,10 +24,6 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px;
 }
 .site-nav .brand { font-weight: 700; color: var(--text); text-decoration: none; margin-right: auto; }
-.site-nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
-.site-nav ul a { color: var(--text-muted); text-decoration: none; font-size: 0.95rem; }
-.site-nav ul a:hover { color: var(--accent); }
-.site-nav ul a[aria-current="page"] { color: var(--accent); font-weight: 600; }
 
 main { max-width: 1100px; margin: 0 auto; padding: 24px var(--gutter) 48px; }
 main > * { max-width: var(--measure); }
@@ -175,8 +171,6 @@ details.section > summary:focus-visible { outline: 2px solid var(--accent); outl
 .section-body .demo { background: var(--bg); }
 .section-body .lede { margin-top: 16px; }
 @media (prefers-reduced-motion: reduce) { details.section > summary::after { transition: none; } }
-/* On phones the section cards already act as the navigation. */
-@media (max-width: 600px) { .site-nav ul { display: none; } }
 
 /* Research landscape */
 .tag-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
@@ -218,9 +212,17 @@ details.section > summary:focus-visible { outline: 2px solid var(--accent); outl
 .card-refs { font-size: 0.9rem; color: var(--text-muted); }
 
 /* Language switch */
-.lang-switch { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-left: 4px; }
+.lang-switch { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
 .lang-switch a { padding: 2px 10px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-decoration: none; }
 .lang-switch a + a { border-left: 1px solid var(--border); }
 .lang-switch a[aria-current="true"] { background: var(--accent); color: var(--accent-contrast); }
 .lang-switch a:not([aria-current="true"]):hover { color: var(--accent); }
-@media (max-width: 600px) { .site-nav .brand { margin-right: auto; } }
+
+/* Theme toggle (icon shows the theme it switches to) */
+.theme-toggle {
+  width: 30px; height: 26px; padding: 0; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--surface); color: var(--text-muted); cursor: pointer; font-size: 15px; line-height: 1;
+}
+.theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+.theme-toggle::before { content: "☾"; }
+.theme-toggle[data-next="light"]::before { content: "☀"; }
