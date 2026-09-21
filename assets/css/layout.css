@@ -119,3 +119,8 @@ h2 { margin-top: 2em; line-height: 1.25; }
 .demo-readout.warning { background: var(--warn-bg); color: var(--warn-text); }
 .demo-readout:empty { display: none; }
 .demo button:disabled { opacity: 0.5; cursor: default; }
+
+/* Citations and bibliography */
+.bibliography { padding-left: 1.4em; }
+.bibliography li { margin-bottom: 0.9em; }
+.cited-on { display: block; font-size: 0.85rem; color: var(--text-muted); }

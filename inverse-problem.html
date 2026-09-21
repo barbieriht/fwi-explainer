@@ -27,26 +27,26 @@
   </header>
   <main id="content">
     <h1>Why FWI is hard</h1>
-    <p class="lede">Forward modeling turns a velocity model into data. Full-waveform inversion runs the other way: it starts from recorded data and searches for the model that would have produced it.</p>
+    <p class="lede">Forward modeling turns a velocity model into data. Full-waveform inversion runs the other way: it starts from recorded data and searches for the model that would have produced it <a class="cite" href="references.html#tarantola1984" data-cite="tarantola1984">(Tarantola, 1984)</a>.</p>
 
     <h2>Inversion as optimization</h2>
     <p>FWI treats the velocity in every grid cell as an unknown. For a model \(\mathbf{m}\), we simulate every shot and measure how far the synthetic seismograms are from the observed ones with a least-squares <strong>misfit</strong>:</p>
     \[ J(\mathbf{m}) = \frac{1}{2} \sum_{\text{shots}} \sum_{\text{receivers}} \int_0^T \big( d_{\text{syn}}(t; \mathbf{m}) - d_{\text{obs}}(t) \big)^2 \, dt. \]
-    <p>The demos below have 3,600 unknowns (a 60 × 60 grid). Field-scale 3D problems have hundreds of millions, so the model is found by iterative, gradient-based optimization rather than by searching:</p>
+    <p>The demos below already have 3,600 unknowns (a 60 × 60 grid), and realistic 3D models have vastly more. Searching that space directly is hopeless, so FWI improves the model iteratively with local, gradient-based optimization <a class="cite" href="references.html#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>:</p>
     \[ \mathbf{m}_{k+1} = \mathbf{m}_k - \alpha_k \, \nabla J(\mathbf{m}_k). \]
 
     <h2>Getting the gradient cheaply: the adjoint-state method</h2>
-    <p>Perturbing each cell one at a time to estimate \(\nabla J\) would take one simulation per unknown. The adjoint-state method gets the whole gradient from just two simulations per shot. The first is the ordinary forward simulation \(p\). The second, the adjoint field \(\lambda\), is driven by the data residuals injected at the receivers and run backward in time. Correlating the two gives the gradient with respect to slowness squared, \(m = 1/v^2\):</p>
+    <p>Perturbing each cell one at a time to estimate \(\nabla J\) would take one simulation per unknown. The adjoint-state method gets the whole gradient from just two simulations per shot. The first is the ordinary forward simulation \(p\). The second, the adjoint field \(\lambda\), is driven by the data residuals injected at the receivers and run backward in time. Correlating the two gives the gradient with respect to slowness squared, \(m = 1/v^2\) <a class="cite" href="references.html#plessix2006" data-cite="plessix2006">(Plessix, 2006)</a>:</p>
     \[ \frac{\partial J}{\partial m(\mathbf{x})} = -\int_0^T \lambda(\mathbf{x}, t)\, \frac{\partial^2 p}{\partial t^2}(\mathbf{x}, t)\, dt. \]
     <p>This site's test suite checks the in-browser implementation against brute-force finite-difference perturbations. The two agree to within 0.2%.</p>
     <p class="note">Adapted from standard adjoint-state formulations of the acoustic wave equation.</p>
 
     <h2>Why it is hard: non-convexity and cycle-skipping</h2>
-    <p>The misfit is not a nice bowl. Seismic waveforms oscillate, so comparing them sample by sample rewards any alignment of peaks with peaks, including the wrong ones. If the starting model predicts an arrival more than <em>half a period</em> away from the observed one, gradient descent pulls it toward the neighbouring wiggle instead of the correct one. This is called <strong>cycle-skipping</strong>:</p>
+    <p>The misfit is not a nice bowl. Seismic waveforms oscillate, so comparing them sample by sample rewards any alignment of peaks with peaks, including the wrong ones. If the starting model predicts an arrival more than <em>half a period</em> away from the observed one, gradient descent pulls it toward the neighbouring wiggle instead of the correct one. This is called <strong>cycle-skipping</strong> <a class="cite" href="references.html#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>:</p>
     \[ |\Delta t| > \frac{1}{2f} \quad\Rightarrow\quad \text{the nearest local minimum is the wrong one.} \]
-    <p>Low frequencies have long periods, so they tolerate larger timing errors. Real recordings, however, often contain little usable low-frequency energy. The problem is also <strong>ill-posed</strong>: sources and receivers only illuminate parts of the subsurface, so different models can fit the same data almost equally well.</p>
+    <p>Low frequencies have long periods, so they tolerate larger timing errors. Real recordings, however, often contain little usable low-frequency energy <a class="cite" href="references.html#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>. The problem is also <strong>ill-posed</strong>: sources and receivers only illuminate parts of the subsurface, so different models can fit the same data almost equally well.</p>
 
-    <p>Both demos use a <strong>crosswell</strong> layout: six sources down the left side of the model, thirty receivers down the right side. The true model is a 2000 m/s background with a faster (2400 m/s) circular body in the middle.</p>
+    <p>Both demos use a <strong>crosswell</strong> layout by default: six sources down the left side of the model, thirty receivers down the right side. The true model is a 2000 m/s background with a faster (2400 m/s) circular body in the middle. The inversion demo can also add sources and receivers along the top and bottom.</p>
 
     <section class="demo wide" id="misfit-landscape" aria-labelledby="ml-title">
       <h3 id="ml-title">Try it: the misfit landscape</h3>
@@ -83,12 +83,13 @@
       <div class="scenario-row" role="group" aria-label="Scenarios">
         <button type="button" data-scenario="good">Good start (2000 m/s, 12 Hz)</button>
         <button type="button" data-scenario="skipped">Cycle-skipped (1700 m/s, 12 Hz)</button>
-        <button type="button" data-scenario="multiscale">Fix: low → high frequency (1700 m/s)</button>
+        <button type="button" data-scenario="multiscale">Fix 1: low → high frequency (1700 m/s)</button>
+        <button type="button" data-scenario="surround">Fix 2: sources and receivers on all sides (1700 m/s, 12 Hz)</button>
       </div>
       <div class="demo-panels models">
         <figure>
           <canvas data-role="truth" role="img" aria-label="True velocity model" aria-describedby="inv-truth-desc"></canvas>
-          <figcaption id="inv-truth-desc">True model (used only to generate the observed data). Orange triangles: sources; dark squares: receivers.</figcaption>
+          <figcaption id="inv-truth-desc">True model (used only to generate the observed data). Orange circles: sources; dark squares: receivers.</figcaption>
         </figure>
         <figure>
           <canvas data-role="current" role="img" aria-label="Current inverted velocity model" aria-describedby="inv-current-desc"></canvas>
@@ -111,6 +112,11 @@
           <label><input type="radio" name="inv-band" value="high" checked> 12 Hz only</label>
           <label><input type="radio" name="inv-band" value="multi"> 4 Hz, then 12 Hz</label>
         </fieldset>
+        <fieldset>
+          <legend>Sources and receivers</legend>
+          <label><input type="radio" name="inv-geometry" value="crosswell" checked> left and right</label>
+          <label><input type="radio" name="inv-geometry" value="surround"> all four sides</label>
+        </fieldset>
         <div class="button-row">
           <button type="button" class="primary" data-role="run" aria-pressed="false">Run</button>
           <button type="button" data-role="step">One iteration</button>
@@ -122,9 +128,10 @@
 
     <h2>What to look for</h2>
     <ul>
-      <li><strong>Good start:</strong> the background is already right, the misfit falls steadily, and the fast body appears in the right place.</li>
+      <li><strong>Good start:</strong> the background is already right, the misfit falls steadily, and the fast body appears in the right place. It is smeared horizontally: with sources on one side and receivers on the other, most waves cross it left to right, which constrains its width poorly.</li>
       <li><strong>Cycle-skipped:</strong> starting 15% too slow, the 12 Hz misfit stalls well above zero. The estimate fills with stripes and velocities hit the allowed limits. It is fitting the wrong wiggles.</li>
-      <li><strong>Low → high frequency:</strong> from the same bad start, the 4 Hz stage first corrects the smooth background, which brings most arrivals within half a 12 Hz period. The 12 Hz stage then sharpens the fast body. The result is far better than the cycle-skipped run but not as clean as the good start: some stripes remain and the 12 Hz misfit levels off around 20%.</li>
+      <li><strong>Fix 1, low → high frequency:</strong> from the same bad start, the 4 Hz stage first corrects the smooth background, which brings arrivals within half a 12 Hz period. The 12 Hz stage then sharpens the fast body. Moving from low to high frequencies is a classic remedy for cycle-skipping <a class="cite" href="references.html#bunks1995" data-cite="bunks1995">(Bunks et al., 1995)</a>.</li>
+      <li><strong>Fix 2, sources and receivers on all sides:</strong> still starting 15% too slow and using only 12 Hz data. The added short source–receiver distances along the top and bottom have arrival errors below half a period, so they pull the background toward the right value first, and the longer paths follow. In this demo, a start that is too <em>fast</em> (2500 m/s) still cycle-skips with this layout.</li>
     </ul>
     <p class="note">Simplifications: the observed data come from the same solver and grid used for inversion, with no noise. Real data are noisier and never match the physics exactly, which makes every one of these problems harder.</p>
 

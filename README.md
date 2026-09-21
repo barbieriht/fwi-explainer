@@ -24,6 +24,22 @@ Unit tests cover the wave solver (stability, arrival times, absorbing
 boundaries) and the inversion (the adjoint-state gradient is checked against
 finite differences to within 1%). No dependencies to install; Node 18+.
 
+## Content pipeline
+
+Citations in the pages are links with a `data-cite="id"` attribute. The
+References page is generated from them and from the reference data in
+`assets/data/`:
+
+```sh
+node scripts/build-references.js          # regenerate references.html
+node scripts/build-references.js --check  # fail if it is out of date
+```
+
+`assets/data/foundational-references.json` holds textbook-level references
+(metadata checked against Crossref). The author's literature corpus will be
+added as `assets/data/literature.json`. A test fails if any page cites an id
+that is not in the data.
+
 ## Third-party code
 
 Vendored in `assets/vendor/` with their licenses:

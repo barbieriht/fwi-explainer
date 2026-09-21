@@ -1,8 +1,11 @@
 /*
- * Shared experiment for the Inverse Problem page: a crosswell survey (sources
- * down the left edge, receivers down the right edge) over a true model with a
- * fast circular anomaly. Transmission geometry makes arrival-time errors, and
- * therefore cycle-skipping, easy to see.
+ * Shared experiment for the Inverse Problem page: a true model with a fast
+ * circular anomaly and two acquisition geometries.
+ *  - crosswell: sources down the left edge, receivers down the right edge.
+ *    Transmission geometry makes arrival-time errors, and therefore
+ *    cycle-skipping, easy to see.
+ *  - surround: crosswell plus sources and receivers along the top and bottom,
+ *    adding short source-receiver distances.
  */
 (function (root) {
   'use strict';
@@ -23,12 +26,33 @@
   const ANOMALY = { ix: 30, iz: 30, radius: 10, velocity: 2400 };
   const LOW_HZ = 4;
   const HIGH_HZ = 12;
-  const MASK_TAPER_CELLS = 4;
+  const TOP_ROW = SOURCE_COLUMN;
+  const BOTTOM_ROW = RECEIVER_COLUMN;
 
-  const SHOTS = [];
-  for (let iz = 5; iz < N; iz += 10) SHOTS.push({ ix: SOURCE_COLUMN, iz: iz });
-  const RECEIVERS = [];
-  for (let iz = 1; iz < N; iz += 2) RECEIVERS.push({ ix: RECEIVER_COLUMN, iz: iz });
+  function crosswell() {
+    const shots = [];
+    for (let iz = 5; iz < N; iz += 10) shots.push({ ix: SOURCE_COLUMN, iz: iz });
+    const receivers = [];
+    for (let iz = 1; iz < N; iz += 2) receivers.push({ ix: RECEIVER_COLUMN, iz: iz });
+    return { shots: shots, receivers: receivers };
+  }
+
+  function surround() {
+    const base = crosswell();
+    const shots = base.shots.slice();
+    [20, 40].forEach(function (ix) {
+      shots.push({ ix: ix, iz: TOP_ROW });
+      shots.push({ ix: ix, iz: BOTTOM_ROW });
+    });
+    const receivers = base.receivers.slice();
+    for (let ix = 7; ix < RECEIVER_COLUMN - 2; ix += 3) {
+      receivers.push({ ix: ix, iz: TOP_ROW });
+      receivers.push({ ix: ix, iz: BOTTOM_ROW });
+    }
+    return { shots: shots, receivers: receivers };
+  }
+
+  const GEOMETRIES = Object.freeze({ crosswell: crosswell(), surround: surround() });
 
   function homogeneous(v) {
     return new Float32Array(N * N).fill(v);
@@ -45,28 +69,18 @@
     return m;
   }
 
-  // Gradient taper: zero next to the source and receiver columns (where the
-  // gradient is singular), ramping to one over a few cells.
-  function gradientMask() {
-    const mask = new Float32Array(N * N);
-    for (let iz = 0; iz < N; iz++) {
-      for (let ix = 0; ix < N; ix++) {
-        const d = Math.min(ix - SOURCE_COLUMN, RECEIVER_COLUMN - ix) - 2;
-        mask[iz * N + ix] = Math.min(1, Math.max(0, d / MASK_TAPER_CELLS));
-      }
-    }
-    return mask;
-  }
 
-  function survey(f0, shots) {
+  function survey(f0, geometryName, shots) {
+    const geometry = GEOMETRIES[geometryName];
     return FWI.inversion.createSurvey({
       nx: N, nz: N, dx: DX, dt: DT, nt: NT, f0: f0,
-      shots: shots || SHOTS, receivers: RECEIVERS, spongeCells: SPONGE,
+      shots: shots || geometry.shots, receivers: geometry.receivers, spongeCells: SPONGE,
     });
   }
 
   // Draw a velocity model (with acquisition markers) onto a display canvas.
-  function drawModel(canvas, model) {
+  function drawModel(canvas, model, geometryName) {
+    const geometry = GEOMETRIES[geometryName];
     const size = canvas.width;
     const buffer = document.createElement('canvas');
     buffer.width = N;
@@ -88,19 +102,16 @@
     const cell = size / N;
     ctx.fillStyle = '#e8a33d';
     ctx.strokeStyle = '#1c1f24';
-    SHOTS.forEach(function (s) {
+    geometry.shots.forEach(function (s) {
       const x = (s.ix + 0.5) * cell;
       const y = (s.iz + 0.5) * cell;
       ctx.beginPath();
-      ctx.moveTo(x + 7, y);
-      ctx.lineTo(x - 5, y - 6);
-      ctx.lineTo(x - 5, y + 6);
-      ctx.closePath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
     });
     ctx.fillStyle = '#1c1f24';
-    RECEIVERS.forEach(function (r) {
+    geometry.receivers.forEach(function (r) {
       ctx.fillRect((r.ix + 0.5) * cell - 2, (r.iz + 0.5) * cell - 2, 4, 4);
     });
   }
@@ -108,8 +119,8 @@
   FWI.inverseSetup = {
     N: N, DX: DX, DT: DT, NT: NT, VMIN: VMIN, VMAX: VMAX,
     BACKGROUND: BACKGROUND, LOW_HZ: LOW_HZ, HIGH_HZ: HIGH_HZ,
-    SHOTS: SHOTS, RECEIVERS: RECEIVERS,
-    homogeneous: homogeneous, trueModel: trueModel, gradientMask: gradientMask,
+    GEOMETRIES: GEOMETRIES,
+    homogeneous: homogeneous, trueModel: trueModel,
     survey: survey, drawModel: drawModel,
   };
 })(globalThis);

@@ -1,0 +1,45 @@
+{
+  "_about": "Foundational, textbook-level references approved by the author. Metadata verified against Crossref. The author's literature corpus (literature.json) is separate.",
+  "references": [
+    {
+      "id": "tarantola1984",
+      "authors": ["Tarantola, A."],
+      "year": 1984,
+      "title": "Inversion of seismic reflection data in the acoustic approximation",
+      "venue": "Geophysics", "volume": "49", "issue": "8", "pages": "1259–1266",
+      "doi": "10.1190/1.1441754"
+    },
+    {
+      "id": "cerjan1985",
+      "authors": ["Cerjan, C.", "Kosloff, D.", "Kosloff, R.", "Reshef, M."],
+      "year": 1985,
+      "title": "A nonreflecting boundary condition for discrete acoustic and elastic wave equations",
+      "venue": "Geophysics", "volume": "50", "issue": "4", "pages": "705–708",
+      "doi": "10.1190/1.1441945"
+    },
+    {
+      "id": "bunks1995",
+      "authors": ["Bunks, C.", "Saleck, F. M.", "Zaleski, S.", "Chavent, G."],
+      "year": 1995,
+      "title": "Multiscale seismic waveform inversion",
+      "venue": "Geophysics", "volume": "60", "issue": "5", "pages": "1457–1473",
+      "doi": "10.1190/1.1443880"
+    },
+    {
+      "id": "plessix2006",
+      "authors": ["Plessix, R.-E."],
+      "year": 2006,
+      "title": "A review of the adjoint-state method for computing the gradient of a functional with geophysical applications",
+      "venue": "Geophysical Journal International", "volume": "167", "issue": "2", "pages": "495–503",
+      "doi": "10.1111/j.1365-246X.2006.02978.x"
+    },
+    {
+      "id": "virieux2009",
+      "authors": ["Virieux, J.", "Operto, S."],
+      "year": 2009,
+      "title": "An overview of full-waveform inversion in exploration geophysics",
+      "venue": "Geophysics", "volume": "74", "issue": "6", "pages": "WCC1–WCC26",
+      "doi": "10.1190/1.3238367"
+    }
+  ]
+}

@@ -16,9 +16,10 @@
   const MODEL_CANVAS_PX = 300;
 
   const SCENARIOS = {
-    good: { v0: 2000, band: 'high' },
-    skipped: { v0: 1700, band: 'high' },
-    multiscale: { v0: 1700, band: 'multi' },
+    good: { v0: 2000, band: 'high', geometry: 'crosswell' },
+    skipped: { v0: 1700, band: 'high', geometry: 'crosswell' },
+    multiscale: { v0: 1700, band: 'multi', geometry: 'crosswell' },
+    surround: { v0: 1700, band: 'high', geometry: 'surround' },
   };
 
   const el = {
@@ -28,6 +29,7 @@
     v0: root.querySelector('[data-role="v0"]'),
     v0Value: root.querySelector('[data-role="v0-value"]'),
     bands: root.querySelectorAll('input[name="inv-band"]'),
+    geometries: root.querySelectorAll('input[name="inv-geometry"]'),
     scenarios: root.querySelectorAll('[data-scenario]'),
     run: root.querySelector('[data-role="run"]'),
     step: root.querySelector('[data-role="step"]'),
@@ -48,7 +50,6 @@
   });
 
   const truth = setup.trueModel();
-  const mask = setup.gradientMask();
   const observedCache = {};
 
   const state = {
@@ -57,32 +58,37 @@
     stopAfterIteration: false,
   };
 
-  function observedFor(freq) {
-    if (!observedCache[freq]) observedCache[freq] = FWI.inversion.simulate(setup.survey(freq), truth);
-    return observedCache[freq];
+  function observedFor(freq, geometry) {
+    const key = geometry + ':' + freq;
+    if (!observedCache[key]) observedCache[key] = FWI.inversion.simulate(setup.survey(freq, geometry), truth);
+    return observedCache[key];
   }
 
-  function selectedBand() {
-    const checked = Array.prototype.find.call(el.bands, function (r) { return r.checked; });
-    return checked ? checked.value : 'high';
+  function checkedValue(radios, fallback) {
+    const checked = Array.prototype.find.call(radios, function (r) { return r.checked; });
+    return checked ? checked.value : fallback;
   }
+
+  function selectedBand() { return checkedValue(el.bands, 'high'); }
+  function selectedGeometry() { return checkedValue(el.geometries, 'crosswell'); }
 
   function startFreq(band) {
     return band === 'high' ? setup.HIGH_HZ : setup.LOW_HZ;
   }
 
-  function newInversion(freq, model) {
-    return FWI.inversion.createInversion(setup.survey(freq), observedFor(freq), model, {
-      vmin: setup.VMIN, vmax: setup.VMAX, mask: mask,
+  function newInversion(freq, geometry, model) {
+    return FWI.inversion.createInversion(setup.survey(freq, geometry), observedFor(freq, geometry), model, {
+      vmin: setup.VMIN, vmax: setup.VMAX,
     });
   }
 
   function createRun() {
     const band = selectedBand();
+    const geometry = selectedGeometry();
     const freq = startFreq(band);
-    const inversion = newInversion(freq, setup.homogeneous(Number(el.v0.value)));
+    const inversion = newInversion(freq, geometry, setup.homogeneous(Number(el.v0.value)));
     return {
-      band: band, freq: freq, inversion: inversion, iteration: 0,
+      band: band, geometry: geometry, freq: freq, inversion: inversion, iteration: 0,
       generator: inversion.iterate(), segments: [[]], switchAt: null,
     };
   }
@@ -105,7 +111,9 @@
   }
 
   function render() {
-    setup.drawModel(el.current, state.run ? state.run.inversion.model : setup.homogeneous(Number(el.v0.value)));
+    const geometry = selectedGeometry();
+    setup.drawModel(el.truth, truth, geometry);
+    setup.drawModel(el.current, state.run ? state.run.inversion.model : setup.homogeneous(Number(el.v0.value)), geometry);
     renderChart();
     const run = state.run;
     if (!run || run.iteration === 0) {
@@ -125,7 +133,7 @@
     if (run.band === 'multi' && run.freq === setup.LOW_HZ && run.iteration === MULTISCALE_SWITCH) {
       run.freq = setup.HIGH_HZ;
       run.switchAt = run.iteration;
-      run.inversion = newInversion(run.freq, run.inversion.model);
+      run.inversion = newInversion(run.freq, run.geometry, run.inversion.model);
       run.segments.push([]);
     }
     run.generator = run.inversion.iterate();
@@ -149,7 +157,7 @@
         return;
       }
     } else {
-      el.status.textContent = 'Computing gradient and line search… (shot ' + (r.value + 1) + ' of ' + setup.SHOTS.length + ')';
+      el.status.textContent = 'Computing gradient and line search… (shot ' + (r.value + 1) + ' of ' + setup.GEOMETRIES[run.geometry].shots.length + ')';
     }
     setTimeout(pump, 0);
   }
@@ -186,6 +194,7 @@
     el.v0.value = String(s.v0);
     el.v0Value.textContent = s.v0 + ' m/s';
     el.bands.forEach(function (r) { r.checked = r.value === s.band; });
+    el.geometries.forEach(function (r) { r.checked = r.value === s.geometry; });
     reset('Scenario loaded. Press Run.');
   }
 
@@ -197,6 +206,7 @@
     reset('Starting model changed. Press Run.');
   });
   el.bands.forEach(function (r) { r.addEventListener('change', function () { reset('Frequency band changed. Press Run.'); }); });
+  el.geometries.forEach(function (r) { r.addEventListener('change', function () { reset('Acquisition geometry changed. Press Run.'); }); });
   el.scenarios.forEach(function (b) {
     b.addEventListener('click', function () { applyScenario(b.dataset.scenario); });
   });
@@ -205,6 +215,5 @@
   el.v0.min = '1600';
   el.v0.max = '2400';
   el.v0.step = '50';
-  setup.drawModel(el.truth, truth);
   applyScenario('skipped');
 })();

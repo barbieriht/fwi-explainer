@@ -14,7 +14,8 @@
   const V_START = 1500;
   const V_STOP = 2600;
   const V_STEP = 50;
-  const MIDDLE_SHOT = setup.SHOTS[2];
+  const GEOMETRY = 'crosswell';
+  const MIDDLE_SHOT = setup.GEOMETRIES[GEOMETRY].shots[2];
   const MIDDLE_RECEIVER = 12; // same depth as the middle shot
   const MAX_LAG_SECONDS = 0.25;
   const FREQS = [setup.LOW_HZ, setup.HIGH_HZ];
@@ -50,7 +51,7 @@
   let started = false;
 
   function traceAt(record) {
-    const nrec = setup.RECEIVERS.length;
+    const nrec = setup.GEOMETRIES[GEOMETRY].receivers.length;
     const out = new Float32Array(setup.NT);
     for (let it = 0; it < setup.NT; it++) out[it] = record[it * nrec + MIDDLE_RECEIVER];
     return out;
@@ -74,7 +75,7 @@
   function* computeSteps() {
     const truth = setup.trueModel();
     for (const f of FREQS) {
-      const survey = setup.survey(f, [MIDDLE_SHOT]);
+      const survey = setup.survey(f, GEOMETRY, [MIDDLE_SHOT]);
       const observed = FWI.inversion.simulate(survey, truth);
       const entry = { misfit: [], traces: [], observed: traceAt(observed[0]) };
       results[f] = entry;
