@@ -1,26 +1,50 @@
 # FWI Explainer
 
+**Live: https://barbieriht.github.io/fwi-explainer/** · [Português](https://barbieriht.github.io/fwi-explainer/index.pt.html)
+
 An interactive, in-browser explainer of seismic Full-Waveform Inversion (FWI)
-and deep-learning approaches to it. Everything runs client-side; the site is
-plain HTML/CSS/JS with no build step and no network requests at runtime.
+and deep-learning approaches to it. The wave simulations and the inversion
+run live in the browser; there is no backend, no build step and no network
+request at runtime. Built as part of ongoing PhD research in AI at the
+University of São Paulo (USP).
 
-It is a single page with collapsible sections: forward modeling, the inverse
-problem, deep learning, research landscape, open problems and references.
-Each interactive demo starts only when its section is opened, and any section
-or reference can be linked directly (e.g. `index.html#inverse-problem`).
+![The page with its collapsible sections](assets/img/readme/overview.png)
 
-The site is bilingual: `index.html` (English) and `index.pt.html`
-(Portuguese), switched with the EN/PT control in the header, which keeps the
-current section. The two files are maintained side by side: edit the prose in
-both, and keep their structure identical (tests compare ids, controls,
-scripts and citations). Strings produced by the demos at runtime live in
-`assets/js/i18n.js`.
+## What is inside
 
-> Status: all sections are live; polishing is in progress.
+- **Forward modeling.** A 2D acoustic finite-difference solver: paint a
+  velocity model, place the source, and watch the wavefield and the shot
+  gather build up.
+- **The inverse problem.** Adjoint-state FWI in the browser. A misfit
+  landscape and four inversion scenarios show cycle-skipping, and two ways
+  around it.
+- **Deep learning.** A classical-vs-network comparison computed offline on a
+  laptop GPU, including a case where the network fails on unfamiliar
+  geology.
+- **Research landscape, open problems, references.** Built from the author's
+  bibliography (40 papers), with every citation resolving to a real entry.
+
+| Forward modeling | Cycle-skipping |
+|---|---|
+| ![Wavefield and shot gather](assets/img/readme/forward-modeling.png) | ![Inversion stuck in a local minimum](assets/img/readme/cycle-skipping.png) |
+
+## How the page is organized
+
+A single page with collapsible sections. Each demo starts only when its
+section is opened and pauses when it is closed. Any section or reference can
+be linked directly (e.g. `index.html#inverse-problem`). The header has an
+EN/PT language switch, which keeps the current section, and a light/dark
+theme toggle, which defaults to the system setting.
+
+The two languages are two files, `index.html` and `index.pt.html`, maintained
+side by side: edit the prose in both and keep their structure identical
+(tests compare ids, controls, scripts and citations). Strings produced by the
+demos at runtime live in `assets/js/i18n.js`.
 
 ## Run locally
 
-Open `index.html` in a browser, or serve the folder:
+Clone the repository and open `index.html` in a browser; nothing needs to be
+installed. Or serve the folder:
 
 ```sh
 python3 -m http.server 8000   # then visit http://localhost:8000
@@ -32,9 +56,10 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 node --test
 ```
 
-Unit tests cover the wave solver (stability, arrival times, absorbing
-boundaries) and the inversion (the adjoint-state gradient is checked against
-finite differences to within 1%). No dependencies to install; Node 18+.
+Node 18+ and no dependencies. The tests cover the wave solver (stability,
+arrival times, absorbing boundaries), the inversion (the adjoint-state
+gradient is checked against finite differences to within 1%), the literature
+data, the generated page content and the parity of the two language versions.
 
 ## Content pipeline
 
@@ -85,6 +110,14 @@ python3 compare.py --data ../../data-src/dl           # classical FWI vs network
 `data-src/` (dataset and checkpoints) is git-ignored. The simulator in
 `scripts/dl/common.py` uses the same scheme as the browser solver and matches
 it to within 1e-5 relative error.
+
+## Credits
+
+- Standard numerical methods (finite-difference time-domain wave simulation,
+  adjoint-state gradients, sponge boundaries, multiscale inversion) are
+  cited on the page where they are introduced.
+- No figure, table or text is reproduced from any paper; every visual is
+  computed from the equations or from the author's own experiments.
 
 ## Third-party code
 
