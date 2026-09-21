@@ -32,3 +32,21 @@ test('pages show exactly the approved readings', () => {
     assert.deepEqual(shown, approved.map((r) => r.id).sort(), page.file);
   }
 });
+
+test('every reading has a citation count and the list is ranked by it', () => {
+  const { rankedReadings, loadCitations } = require('../scripts/build-page.js');
+  const refs = loadReferences();
+  const citations = loadCitations();
+  for (const r of loadReadings(refs, PAGES[0].groups)) {
+    assert.ok(Number.isInteger(citations.cited_by_count[r.id]), 'no count for ' + r.id);
+  }
+  const ranked = rankedReadings(refs, PAGES[0].groups, citations);
+  for (let i = 1; i < ranked.length; i++) assert.ok(ranked[i - 1].citations >= ranked[i].citations);
+  const html = read('index.html');
+  const block = html.slice(html.indexOf('<!-- readings:start'), html.indexOf('<!-- readings:end -->'));
+  assert.deepEqual(Array.from(block.matchAll(/data-cite="([^"]+)"/g), (m) => m[1]), ranked.map((r) => r.id));
+});
+
+test('every reading decision has a written review', () => {
+  for (const r of loadReadings(loadReferences(), PAGES[0].groups)) assert.ok(r.review.length > 10, r.id);
+});

@@ -1,0 +1,27 @@
+{
+  "source": "OpenAlex",
+  "retrieved": "2026-09-21",
+  "cited_by_count": {
+    "tarantola1984": 3738,
+    "virieux2009": 3760,
+    "bunks1995": 1628,
+    "warner2016": 391,
+    "engquist2022": 50,
+    "sun2022mlmisfit": 19,
+    "saad2026siamesefit": 0,
+    "operto2013": 411,
+    "keating2020": 27,
+    "huo2026cnnmmi": 1,
+    "zhu2022integrating": 119,
+    "sun2023implicit": 96,
+    "liu2026reparam": 5,
+    "deng2022openfwi": 13,
+    "taufik2024learned": 21,
+    "zhang2023eifwi": 21,
+    "yin2025wiser": 9,
+    "elmeliegy2026vae": 0,
+    "li2022targetlapse": 23,
+    "li2026co2": 0,
+    "metivier2016": 320
+  }
+}

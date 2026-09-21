@@ -110,11 +110,17 @@ abstract. Only aggregate counts are written, to
 
 ### Curated readings
 
-`content/readings.csv` lists candidate readings (`id` from the reference data,
-page `group`, one sentence in English and Portuguese, the `source` the
-sentence is based on, and `approved`). Draft sentences restate each paper's
-abstract. Only rows with `approved=yes` appear on the page, after
-`node scripts/build-page.js`.
+`content/readings.csv` lists candidate readings: `id` from the reference data,
+page `group`, the `source` the sentence is based on, `approved`, a written
+`review` of the decision, and one sentence in English and Portuguese that
+restates the paper's abstract. The selection criterion is whether the
+abstract shows the paper is about FWI methods. Approved rows are ranked by
+citation count:
+
+```sh
+python3 scripts/update-citations.py   # OpenAlex counts -> content/citations.json
+node scripts/build-page.js
+```
 
 ## Deep-learning comparison (offline)
 
