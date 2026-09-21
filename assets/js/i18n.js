@@ -65,14 +65,7 @@
       'sn.studies': 'Studies',
       'sn.yearsAria': 'Collected studies per year, split into those that mention machine learning or deep learning and the others.',
       'sn.barTitle': '{year}: {total} studies, {ml} mentioning ML/deep learning',
-      'sn.topicsAria': 'Share of collected studies mentioning each topic, before {year} and from {year} on.',
-      'sn.dotTitle': '{topic}: {early}% before {year}, {late}% from {year} on',
       'sn.summary': '{n} unique studies, snapshot of {date}. Mentions of machine learning or deep learning go from {early}% of the studies before {year} to {late}% from {year} on. * {partial} is a partial year.',
-      'sn.topic.ml': 'ML / deep learning',
-      'sn.topic.multiparameter': 'multiparameter / elastic',
-      'sn.topic.time-lapse': 'time-lapse / 4D',
-      'sn.topic.uncertainty': 'uncertainty / Bayesian',
-      'sn.topic.cycle-skipping': 'cycle-skipping / misfit',
 
     },
     pt: {
@@ -133,14 +126,7 @@
       'sn.studies': 'Estudos',
       'sn.yearsAria': 'Estudos reunidos por ano, separados entre os que mencionam machine learning ou deep learning e os demais.',
       'sn.barTitle': '{year}: {total} estudos, {ml} mencionando ML/deep learning',
-      'sn.topicsAria': 'Fração dos estudos reunidos que menciona cada tema, antes de {year} e a partir de {year}.',
-      'sn.dotTitle': '{topic}: {early}% antes de {year}, {late}% a partir de {year}',
       'sn.summary': '{n} estudos únicos, retrato de {date}. As menções a machine learning ou deep learning passam de {early}% dos estudos antes de {year} para {late}% a partir de {year}. * {partial} é um ano parcial.',
-      'sn.topic.ml': 'ML / deep learning',
-      'sn.topic.multiparameter': 'multiparâmetro / elástico',
-      'sn.topic.time-lapse': 'time-lapse / 4D',
-      'sn.topic.uncertainty': 'incerteza / bayesiano',
-      'sn.topic.cycle-skipping': 'cycle-skipping / misfit',
 
     },
   };

@@ -140,6 +140,13 @@ python3 compare.py --data ../../data-src/dl           # classical FWI vs network
 `scripts/dl/common.py` uses the same scheme as the browser solver and matches
 it to within 1e-5 relative error.
 
+## Developed with Claude Code
+
+This repository was developed with the assistance of
+[Claude Code](https://claude.com/claude-code), Anthropic's AI coding agent,
+under the author's direction and review. Commits made with its help carry a
+`Co-Authored-By: Claude` trailer.
+
 ## Credits
 
 - Standard numerical methods (finite-difference time-domain wave simulation,

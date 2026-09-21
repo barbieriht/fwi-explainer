@@ -175,18 +175,11 @@ details.section > summary:focus-visible { outline: 2px solid var(--accent); outl
 .bar-ml { fill: var(--series-a); }
 .bar-other { fill: var(--series-muted); }
 .bar rect { stroke: var(--bg); stroke-width: 1; }
-.dumbbell-link { stroke: var(--border); stroke-width: 2; }
-.dot-early { fill: var(--series-muted); }
-.dot-late { fill: var(--series-a); }
-.topic-label { font-size: 12px; }
 .legend-ml { color: var(--series-a); }
-.legend-other, .legend-early { color: var(--series-muted); }
-.legend-late { color: var(--series-a); }
-.chart-legend li.legend-ml::before, .chart-legend li.legend-other::before,
-.chart-legend li.legend-early::before, .chart-legend li.legend-late::before {
+.legend-other { color: var(--series-muted); }
+.chart-legend li.legend-ml::before, .chart-legend li.legend-other::before {
   width: 10px; height: 10px; border-top: 0; background: currentColor;
 }
-.chart-legend li.legend-early::before, .chart-legend li.legend-late::before { border-radius: 50%; }
 /* Reading list scrolls inside its own box; shadows hint at more content above/below. */
 .reading-scroll {
   max-height: 420px; overflow-y: auto; overscroll-behavior: contain;

@@ -1,8 +1,8 @@
 /*
  * Search snapshot: aggregate counts from the author's collected studies
  * (assets/data/search-snapshot.js, built by scripts/import-zotero.py).
- *  1. Studies per year, split into those mentioning ML/deep learning and others.
- *  2. Share of studies per topic before and after a split year (dumbbell plot).
+ * Studies per year, split into those mentioning ML/deep learning and others,
+ * plus a one-line summary of how the ML share changed around SPLIT_YEAR.
  */
 (function () {
   'use strict';
@@ -22,7 +22,6 @@
 
     const el = {
       years: root.querySelector('[data-role="years-chart"]'),
-      topics: root.querySelector('[data-role="topics-chart"]'),
       summary: root.querySelector('[data-role="summary"]'),
     };
 
@@ -39,7 +38,7 @@
       return bucket === data.partial_year ? bucket + '*' : bucket;
     }
 
-    // ---------- 1. studies per year ----------
+    // ---------- studies per year ----------
 
     function drawYears() {
       const width = chartWidth(el.years);
@@ -78,63 +77,21 @@
       });
     }
 
-    // ---------- 2. topic share before / after the split ----------
+    // ---------- ML share before / after the split ----------
 
-    function periodShares() {
-      const early = { total: 0 };
-      const late = { total: 0 };
-      data.topics.forEach(function (topic) { early[topic] = 0; late[topic] = 0; });
+    function mlShare() {
+      const early = { total: 0, ml: 0 };
+      const late = { total: 0, ml: 0 };
       data.years.forEach(function (r) {
         const bucket = /^\d+$/.test(r.year) && Number(r.year) >= SPLIT_YEAR ? late : early;
         bucket.total += r.total;
-        data.topics.forEach(function (topic) { bucket[topic] += r[topic]; });
+        bucket.ml += r.ml;
       });
-      return data.topics.map(function (topic) {
-        return { topic: topic, early: early[topic] / early.total, late: late[topic] / late.total };
-      }).sort(function (a, b) { return (b.late - b.early) - (a.late - a.early); });
+      return { early: early.ml / early.total, late: late.ml / late.total };
     }
 
-    function drawTopics(shares) {
-      const width = chartWidth(el.topics);
-      // Each topic gets its label on one line and its dumbbell on the next, so
-      // long (translated) labels never get clipped on narrow screens.
-      const rowH = 46;
-      const labelGap = 16;
-      const m = { top: 4, right: 16, bottom: 32, left: 8 };
-      const innerW = width - m.left - m.right;
-      const innerH = shares.length * rowH;
-      const height = innerH + m.top + m.bottom;
-      const x = d3.scaleLinear().domain([0, Math.max(0.5, d3.max(shares, function (s) { return Math.max(s.early, s.late); }))]).nice().range([0, innerW]);
-      const y = d3.scaleBand().domain(shares.map(function (s) { return s.topic; })).range([0, innerH]);
-
-      const svg = d3.select(el.topics).append('svg')
-        .attr('viewBox', '0 0 ' + width + ' ' + height).attr('class', 'chart')
-        .attr('role', 'img').attr('aria-label', t('sn.topicsAria', { year: SPLIT_YEAR }));
-      const g = svg.append('g').attr('transform', 'translate(' + m.left + ',' + m.top + ')');
-      g.append('g').attr('class', 'chart-grid').selectAll('line').data(x.ticks(5)).join('line')
-        .attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', innerH);
-      g.append('g').attr('class', 'chart-axis').attr('transform', 'translate(0,' + innerH + ')')
-        .call(d3.axisBottom(x).ticks(width < 480 ? 3 : 5).tickFormat(function (v) { return num(100 * v) + '%'; }).tickSizeOuter(0));
-      g.selectAll('text.topic-label').data(shares).join('text')
-        .attr('class', 'chart-label topic-label').attr('x', 0)
-        .attr('y', function (s) { return y(s.topic) + 12; })
-        .text(function (s) { return t('sn.topic.' + s.topic); });
-
-      const rows = g.selectAll('g.dumbbell').data(shares).join('g').attr('class', 'dumbbell')
-        .attr('transform', function (s) { return 'translate(0,' + (y(s.topic) + 12 + labelGap) + ')'; });
-      rows.append('line').attr('class', 'dumbbell-link')
-        .attr('x1', function (s) { return x(s.early); }).attr('x2', function (s) { return x(s.late); });
-      rows.append('circle').attr('class', 'dot-early').attr('r', 5).attr('cx', function (s) { return x(s.early); });
-      rows.append('circle').attr('class', 'dot-late').attr('r', 5).attr('cx', function (s) { return x(s.late); });
-      rows.append('title').text(function (s) {
-        return t('sn.dotTitle', { topic: t('sn.topic.' + s.topic), early: num(100 * s.early), late: num(100 * s.late), year: SPLIT_YEAR });
-      });
-    }
-
-    const shares = periodShares();
     drawYears();
-    drawTopics(shares);
-    const ml = shares.find(function (s) { return s.topic === 'ml'; });
+    const ml = mlShare();
     el.summary.textContent = t('sn.summary', {
       n: data.studies, date: localDate(data.snapshot_date), partial: data.partial_year,
       early: num(100 * ml.early), late: num(100 * ml.late), year: SPLIT_YEAR,

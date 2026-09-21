@@ -6,7 +6,7 @@
 
 Reads the collection and all its sub-collections (except those named in
 --exclude), removes duplicates by DOI or normalized title, and classifies
-each study by explicit keyword rules on its title and abstract. Only
+each study by an explicit keyword rule on its title and abstract. Only
 aggregate counts are written (assets/data/search-snapshot.json and a .js
 twin for file:// use); no title, abstract or other per-study field leaves
 this script. The database is opened read-only.
@@ -27,15 +27,11 @@ OUT_JS = ROOT / "assets" / "data" / "search-snapshot.js"
 NON_STUDY_TYPES = ("attachment", "note", "annotation")
 EARLY_YEAR = 2016  # years up to this one are grouped
 
-# Topic -> pattern searched in lower-cased title + abstract. Order = display order.
+# Topic -> pattern searched in lower-cased title + abstract. Only "ml" is shown
+# on the page (share of studies mentioning machine learning / deep learning).
 TOPIC_RULES = {
     "ml": r"deep learning|machine learning|neural network|\bcnns?\b|convolutional|transformer|"
           r"diffusion model|generative|autoencoder|\bgans?\b|u-?net|learning-based|physics-informed neural",
-    "multiparameter": r"multi-?parameter|elastic|anisotrop|density|shear[- ]wave|\bs-wave|petrophysical",
-    "time-lapse": r"time-lapse|time lapse|\b4d\b|monitoring|\bco2\b|co₂",
-    "uncertainty": r"uncertaint|bayesian|posterior|probabilistic|variational inference|monte carlo",
-    "cycle-skipping": r"cycle[- ]skipping|local minim|misfit function|objective function|optimal transport|"
-                      r"low[- ]frequenc",
 }
 
 
