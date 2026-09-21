@@ -1,0 +1,16 @@
+# Raw author exports (converted into assets/data/ by scripts/)
+data-src/
+
+# Offline ML artifacts (only the final exported example is committed)
+scripts/**/*.pt
+scripts/**/*.npz
+scripts/out/
+__pycache__/
+.venv/
+
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Private build brief
+fwi-explainer-build-spec.md
