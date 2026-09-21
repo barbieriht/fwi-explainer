@@ -50,3 +50,40 @@ h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); line-height: 1.2; margin: 0.5em 0; }
 
 .site-footer { border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.9rem; }
 .site-footer p { max-width: 1100px; margin: 0 auto; padding: 16px var(--gutter); }
+
+/* Content sections */
+h2 { margin-top: 2em; line-height: 1.25; }
+.note { font-size: 0.9rem; color: var(--text-muted); border-left: 3px solid var(--border); padding-left: 12px; }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+
+/* Interactive demos */
+.demo {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); padding: 16px; margin: 24px 0;
+}
+.demo-panels { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 760px) { .demo-panels { grid-template-columns: 3fr 2fr; } }
+.demo figure { margin: 0; }
+.demo figcaption { font-size: 0.9rem; color: var(--text-muted); margin-top: 6px; }
+.demo canvas { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 4px; }
+.demo canvas[data-role="model"] { aspect-ratio: 1; touch-action: none; cursor: crosshair; }
+.demo canvas[data-role="gather"] { aspect-ratio: 5 / 6; image-rendering: auto; }
+
+.axis-label { font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: end; margin-top: 16px; }
+.controls fieldset { border: 0; margin: 0; padding: 0; display: flex; gap: 10px; flex-wrap: wrap; }
+.controls legend, .controls .label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px; padding: 0; }
+.control { display: flex; flex-direction: column; }
+.controls select, .controls input[type="range"] { font: inherit; }
+.controls select { padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); }
+.button-row { display: flex; gap: 8px; }
+.demo button {
+  font: inherit; padding: 6px 14px; border-radius: 4px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+}
+.demo button.primary { background: var(--accent); color: var(--accent-contrast); }
+.demo-status { font-size: 0.9rem; color: var(--text-muted); margin: 12px 0 0; font-variant-numeric: tabular-nums; }
+
+.legend-bar { height: 10px; border-radius: 2px; background: linear-gradient(to right, rgb(236,226,204), rgb(72,96,128)); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

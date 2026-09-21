@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Forward Modeling · FWI Explainer</title>
   <meta name="description" content="Interactive, in-browser explainer of seismic Full-Waveform Inversion and deep-learning approaches to it.">
+  <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/layout.css">
 </head>
@@ -25,10 +26,92 @@
   </header>
   <main id="content">
     <h1>The physics of a seismic wave</h1>
-    <p class="placeholder">This module is under construction.</p>
+    <p class="lede">Before we can invert seismic data, we need to be able to predict it. Given a map of how fast sound travels underground, how would a wave from a surface source look by the time it reaches our sensors?</p>
+
+    <h2>Velocity models, sources and receivers</h2>
+    <p>A <strong>velocity model</strong> is a map of the subsurface where each cell stores how fast a pressure wave travels there, in metres per second. Soft sediments are slow; compacted rock is fast. Where velocity changes abruptly, part of the wave's energy reflects back toward the surface.</p>
+    <p>In a seismic survey, a <strong>source</strong> (an air gun offshore, a vibrator truck on land) sends a short pulse into the ground, and a line of <strong>receivers</strong> records pressure over time. Plotting every receiver's recording side by side, time increasing downward, gives a <strong>shot gather</strong>: the raw data that FWI tries to explain.</p>
+
+    <h2>The acoustic wave equation</h2>
+    <p>For a medium with constant density, the pressure field \(p(\mathbf{x}, t)\) obeys</p>
+    \[ \frac{\partial^2 p}{\partial t^2} = v(\mathbf{x})^2\, \nabla^2 p + s(\mathbf{x}, t), \]
+    <p>where \(v(\mathbf{x})\) is the velocity model and \(s\) is the source term. Simulating data from a known model this way is called <strong>forward modeling</strong>.</p>
+
+    <section class="demo wide" id="forward-demo" aria-labelledby="fm-demo-title">
+      <h3 id="fm-demo-title">Try it: propagate a wave through your own model</h3>
+      <div class="demo-panels">
+        <figure>
+          <canvas data-role="model" role="img"
+            aria-label="Velocity model with the wavefield drawn on top"
+            aria-describedby="fm-model-desc"></canvas>
+          <figcaption id="fm-model-desc">Velocity model (1 km × 1 km, light = slow, dark = fast) with the pressure wavefield overlaid in red (positive) and blue (negative). The orange triangle is the source; the small dark squares along the top are receivers.</figcaption>
+          <div class="axis-label" aria-hidden="true"><span>1500 m/s</span><span>4500 m/s</span></div>
+          <div class="legend-bar" aria-hidden="true"></div>
+        </figure>
+        <figure>
+          <canvas data-role="gather" role="img"
+            aria-label="Shot gather recorded by the receivers"
+            aria-describedby="fm-gather-desc"></canvas>
+          <figcaption id="fm-gather-desc">Shot gather: one column per receiver (left to right across the surface), time running downward from 0 to 1 s. The first steep arrival is the direct wave; curved events below it are reflections. Amplitudes get a display-only gain with time.</figcaption>
+        </figure>
+      </div>
+
+      <div class="controls">
+        <label class="control"><span class="label">Model preset</span>
+          <select data-role="preset">
+            <option value="layered" selected>Three layers</option>
+            <option value="anomaly">Circular anomaly</option>
+            <option value="dipping">Dipping interface</option>
+            <option value="homogeneous">Homogeneous</option>
+          </select>
+        </label>
+        <fieldset>
+          <legend>Clicking the model</legend>
+          <label><input type="radio" name="fm-mode" value="source" checked> places the source</label>
+          <label><input type="radio" name="fm-mode" value="paint"> paints velocity</label>
+        </fieldset>
+        <label class="control"><span class="label">Brush velocity: <span data-role="brush-value"></span></span>
+          <input type="range" data-role="brush" step="100">
+        </label>
+        <label class="control"><span class="label">Speed</span>
+          <select data-role="speed">
+            <option value="2">Slow</option>
+            <option value="5" selected>Normal</option>
+            <option value="12">Fast</option>
+          </select>
+        </label>
+        <div class="button-row">
+          <button type="button" class="primary" data-role="play" aria-pressed="false">Play</button>
+          <button type="button" data-role="step">Step</button>
+          <button type="button" data-role="reset">Reset</button>
+        </div>
+      </div>
+      <p class="demo-status"><span data-role="clock"></span> · <span data-role="status" aria-live="polite">Press Play to fire the source.</span></p>
+    </section>
+
+    <h2>What to look for</h2>
+    <ul>
+      <li>In the three-layer model, each interface sends a reflection back up. In the gather these show up as curved events (hyperbolas) that arrive later for deeper interfaces.</li>
+      <li>Once the wave enters a faster layer its wavefront spreads out faster, which also bends (refracts) its direction of travel.</li>
+      <li>A compact anomaly scatters energy in every direction. Its signature in the gather is a diffraction curve centred above it.</li>
+      <li>Try painting a slow, low-velocity zone and compare how much later its reflections arrive.</li>
+    </ul>
+
+    <h2>How the simulation works</h2>
+    <p>The browser solves the wave equation on a 100 × 100 grid of 10 m cells with the finite-difference time-domain method. Derivatives become weighted differences between neighbouring cells, and the field is advanced one small time step \(\Delta t\) at a time:</p>
+    \[ p^{n+1}_{i,j} = 2p^{n}_{i,j} - p^{n-1}_{i,j} + v_{i,j}^2\,\Delta t^2\, \big(\nabla_h^2 p^{n}\big)_{i,j} + \Delta t^2\, s^{n}_{i,j}, \]
+    <p>where \(\nabla_h^2\) is a fourth-order accurate discrete Laplacian. The time step must satisfy a stability (CFL) condition, \(v_{\max}\,\Delta t / \Delta x \le C\), otherwise errors grow exponentially. Here \(\Delta t\) is fixed for the fastest velocity you can paint, so edits can never make the simulation unstable. The source is a Ricker wavelet with a 15 Hz peak frequency. A damping "sponge" layer around the grid absorbs waves that leave it, which mimics an unbounded medium. It is imperfect: a faint residual reflection of about 3% remains.</p>
+    <p class="note">Adapted from standard finite-difference time-domain formulations of the acoustic wave equation.</p>
+
+    <p>Forward modeling answers "what data would this model produce?" The next module asks the harder question in reverse: <a href="inverse-problem.html">given recorded data, what model produced it?</a></p>
   </main>
   <footer class="site-footer">
-    <p>Built by Thiago Barbieri as part of ongoing PhD research in AI at the University of São Paulo (USP). <a href="https://github.com/barbieriht">GitHub</a> · <a href="#" data-todo="linkedin-url">LinkedIn</a></p>
+    <p>Built by Thiago Barbieri as part of ongoing PhD research in AI at the University of São Paulo (USP). <a href="https://github.com/barbieriht">GitHub</a> · <a href="https://www.linkedin.com/in/barbieriht/">LinkedIn</a></p>
   </footer>
+  <script src="assets/vendor/katex/katex.min.js" defer></script>
+  <script src="assets/vendor/katex/auto-render.min.js" defer></script>
+  <script src="assets/js/math.js" defer></script>
+  <script src="assets/js/solver.js" defer></script>
+  <script src="assets/js/forward-demo.js" defer></script>
 </body>
 </html>
