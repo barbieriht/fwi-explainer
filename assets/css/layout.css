@@ -124,3 +124,22 @@ h2 { margin-top: 2em; line-height: 1.25; }
 .bibliography { padding-left: 1.4em; }
 .bibliography li { margin-bottom: 0.9em; }
 .cited-on { display: block; font-size: 0.85rem; color: var(--text-muted); }
+
+/* Deep-learning comparison */
+.dl-layout { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .dl-layout { grid-template-columns: minmax(0, 420px) minmax(0, 260px); align-items: start; } }
+.dl-slider { margin: 0; }
+.dl-stage { position: relative; aspect-ratio: 1; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.dl-stage img, .dl-truth img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.dl-overlay { position: absolute; inset: 0; }
+.dl-divider { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #ffffff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4); pointer-events: none; }
+.dl-tag { position: absolute; top: 8px; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; background: rgba(28, 31, 36, 0.8); color: #ffffff; }
+.dl-tag-left { left: 8px; }
+.dl-tag-right { right: 8px; }
+.dl-slider input[type="range"] { width: 100%; }
+.dl-truth { margin: 0; }
+.dl-truth img { border: 1px solid var(--border); border-radius: 4px; }
+.demo button[aria-pressed="true"] { background: var(--accent); color: var(--accent-contrast); }
+.metrics { border-collapse: collapse; margin-top: 16px; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.metrics caption { text-align: left; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+.metrics th, .metrics td { text-align: left; padding: 6px 16px 6px 0; border-bottom: 1px solid var(--border); }

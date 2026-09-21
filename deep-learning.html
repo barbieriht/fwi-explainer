@@ -6,6 +6,7 @@
   <title>Deep Learning · FWI Explainer</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M2 16 Q6 4 10 16 T18 16 T26 16 T30 16%27 fill=%27none%27 stroke=%27%231f5fa8%27 stroke-width=%273%27/%3E%3C/svg%3E">
   <meta name="description" content="Interactive, in-browser explainer of seismic Full-Waveform Inversion and deep-learning approaches to it.">
+  <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/layout.css">
 </head>
@@ -26,10 +27,90 @@
   </header>
   <main id="content">
     <h1>Learned inversion</h1>
-    <p class="placeholder">This module is under construction.</p>
+    <p class="lede">Iterative FWI solves a new optimization problem for every survey, and it needs a good starting model to avoid cycle-skipping. Learned inversion takes a different route: train a neural network once on many pairs of seismic data and velocity models. After that, inverting new data takes a single forward pass.</p>
+
+    <h2>From optimization to a learned mapping</h2>
+    <p>Classical FWI searches for the model that explains one dataset:</p>
+    \[ \mathbf{m}^\star = \arg\min_{\mathbf{m}} J(\mathbf{m}; \mathbf{d}_{\text{obs}}). \]
+    <p>A learned approach instead fits the parameters \(\theta\) of a network \(f_\theta\) that maps data to models, using a training set of simulated examples \((\mathbf{d}_i, \mathbf{m}_i)\):</p>
+    \[ \theta^\star = \arg\min_{\theta} \sum_i \big\lVert f_{\theta}(\mathbf{d}_i) - \mathbf{m}_i \big\rVert_1, \qquad \hat{\mathbf{m}} = f_{\theta^\star}(\mathbf{d}_{\text{obs}}). \]
+    <p>The expensive part moves from inference time to training time, and the physics enters only through the examples. That trade-off shapes everything below.</p>
+
+    <h2>A small experiment</h2>
+    <p>To make the comparison concrete, I trained a network for this site. Five surface sources and 64 receivers record a 640 m × 640 m model at <span data-fill="f0_hz"></span> Hz. The <span data-fill="train_size" data-format="thousands"></span> training models come from a random generator of curved layers, faults and intrusions. The network is a small convolutional encoder–decoder. Simulating the training data took about 10 minutes and training about 13 minutes, both on a laptop GPU. The classical baseline is FWI run through the same simulator. It starts from a smooth 1D model (the average depth profile of the training models) and works from low to high frequencies.</p>
+
+    <section class="demo wide" id="dl-comparison" aria-labelledby="dl-title">
+      <h3 id="dl-title">Compare: classical FWI and deep learning</h3>
+      <div class="scenario-row" role="group" aria-label="Test case">
+        <button type="button" data-case="in-distribution" aria-pressed="true">Test model like the training data</button>
+        <button type="button" data-case="out-of-distribution" aria-pressed="false">Unfamiliar geology</button>
+      </div>
+      <div class="dl-layout">
+        <figure class="dl-slider">
+          <div class="dl-stage">
+            <img data-role="right-img" alt="" width="256" height="256">
+            <img data-role="left-img" alt="" width="256" height="256" class="dl-overlay">
+            <div class="dl-divider" data-role="divider" aria-hidden="true"></div>
+            <span class="dl-tag dl-tag-left" data-role="left-tag"></span>
+            <span class="dl-tag dl-tag-right" data-role="right-tag"></span>
+          </div>
+          <label class="control"><span class="label">Drag to compare</span>
+            <input type="range" data-role="position" min="0" max="100" value="50">
+          </label>
+        </figure>
+        <figure class="dl-truth">
+          <img data-role="truth-img" alt="True velocity model" width="256" height="256">
+          <figcaption>True model</figcaption>
+          <div class="axis-label" aria-hidden="true"><span>1500 m/s</span><span>4500 m/s</span></div>
+          <div class="legend-bar" aria-hidden="true"></div>
+        </figure>
+      </div>
+      <div class="controls">
+        <label class="control"><span class="label">Left image</span>
+          <select data-role="left">
+            <option value="fwi" selected>Classical FWI</option>
+            <option value="start">Starting model</option>
+            <option value="dl">Deep learning</option>
+            <option value="true">True model</option>
+          </select>
+        </label>
+        <label class="control"><span class="label">Right image</span>
+          <select data-role="right">
+            <option value="dl" selected>Deep learning</option>
+            <option value="fwi">Classical FWI</option>
+            <option value="true">True model</option>
+            <option value="start">Starting model</option>
+          </select>
+        </label>
+      </div>
+      <table class="metrics">
+        <caption>Mean absolute velocity error against the true model, and compute time on a laptop GPU (RTX 3050).</caption>
+        <thead><tr><th scope="col">Method</th><th scope="col">Error</th><th scope="col">Time</th></tr></thead>
+        <tbody data-role="metrics"></tbody>
+      </table>
+      <p class="demo-status" data-role="status"></p>
+    </section>
+
+    <h2>What the comparison shows</h2>
+    <ul>
+      <li><strong>Speed.</strong> Once trained, the network inverts a dataset in about <span data-fill="cases.in-distribution.seconds.dl" data-format="ms"></span>. The classical FWI run takes about <span data-fill="cases.in-distribution.seconds.fwi" data-format="minutes"></span> on the same GPU. The cost has moved rather than vanished: the training set and the training run would have to be redone for a different survey layout or frequency band.</li>
+      <li><strong>Familiar geology.</strong> On models like its training data, the network is accurate: its average error over <span data-fill="test_size"></span> held-out test models is <span data-fill="dl_test_set_mae_mps" data-format="mps"></span>. On the example shown, the two methods land close together (<span data-fill="cases.in-distribution.mae_mps.fwi" data-format="mps"></span> for FWI, <span data-fill="cases.in-distribution.mae_mps.dl" data-format="mps"></span> for the network). The network's model is smoother, and it misses the small body near the bottom right.</li>
+      <li><strong>Unfamiliar geology.</strong> The second model has steep, curved layers and a slow lens, features the generator never produces. FWI still recovers the lens and the shape of the layers (<span data-fill="cases.out-of-distribution.mae_mps.fwi" data-format="mps"></span>), because it fits this particular dataset through the physics. The network returns a plausible-looking layered model with no lens at all (<span data-fill="cases.out-of-distribution.mae_mps.dl" data-format="mps"></span>). It can only reproduce the kinds of structure it was trained on.</li>
+    </ul>
+    <p class="note">This is one small experiment on synthetic, noise-free data. It illustrates the trade-off; it does not rank methods. The test example was chosen by a fixed rule (the test model with the largest velocity variation), not by how either method performed on it. Code: <code>scripts/dl/</code> in the repository.</p>
+
+    <h2>Technique families in the literature</h2>
+    <p class="placeholder">Pending: this section will survey the technique families in my literature corpus (CNN encoder–decoders, physics-informed networks, self-supervised approaches, neural representations, multiparameter inversion and uncertainty quantification), with citations drawn from the corpus.</p>
+
+    <p>Where is the field heading? The <a href="open-problems.html">open problems</a> page collects the gaps these methods still leave.</p>
   </main>
   <footer class="site-footer">
     <p>Built by Thiago Barbieri as part of ongoing PhD research in AI at the University of São Paulo (USP). <a href="https://github.com/barbieriht">GitHub</a> · <a href="https://www.linkedin.com/in/barbieriht/">LinkedIn</a></p>
   </footer>
+  <script src="assets/vendor/katex/katex.min.js" defer></script>
+  <script src="assets/vendor/katex/auto-render.min.js" defer></script>
+  <script src="assets/js/math.js" defer></script>
+  <script src="assets/data/dl-comparison.js" defer></script>
+  <script src="assets/js/dl-demo.js" defer></script>
 </body>
 </html>
