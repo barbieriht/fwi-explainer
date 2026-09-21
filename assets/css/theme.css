@@ -10,6 +10,9 @@
   --accent-contrast: #ffffff;
   --warn-bg: #fff4d6;
   --warn-text: #5c4400;
+  --series-a: #1f5fa8;
+  --series-b: #b8440f;
+  --chart-grid: #e6e8eb;
 
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
@@ -29,5 +32,8 @@
     --accent-contrast: #121418;
     --warn-bg: #3a2f10;
     --warn-text: #f3dc9b;
+    --series-a: #7fb2ec;
+    --series-b: #f0915a;
+    --chart-grid: #2a2f37;
   }
 }

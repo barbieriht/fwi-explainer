@@ -85,5 +85,37 @@ h2 { margin-top: 2em; line-height: 1.25; }
 .demo button.primary { background: var(--accent); color: var(--accent-contrast); }
 .demo-status { font-size: 0.9rem; color: var(--text-muted); margin: 12px 0 0; font-variant-numeric: tabular-nums; }
 
-.legend-bar { height: 10px; border-radius: 2px; background: linear-gradient(to right, rgb(236,226,204), rgb(72,96,128)); }
+/* Must match VELOCITY_STOPS in assets/js/colormap.js */
+.legend-bar { height: 10px; border-radius: 2px; background: linear-gradient(to right, rgb(243,231,196), rgb(86,152,163), rgb(37,52,94)); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Charts (D3) */
+.chart { display: block; width: 100%; height: auto; font-family: var(--font-body); }
+.chart-axis text { fill: var(--text-muted); font-size: 12px; }
+.chart-axis path, .chart-axis line { stroke: var(--border); }
+.chart-grid line { stroke: var(--chart-grid); }
+.chart-label { fill: var(--text-muted); font-size: 13px; }
+.chart-line { fill: none; stroke-width: 2; }
+.chart-line.dashed { stroke-dasharray: 5 4; }
+.series-a { stroke: var(--series-a); color: var(--series-a); }
+.series-b { stroke: var(--series-b); color: var(--series-b); }
+.chart-marker line { stroke: var(--text-muted); stroke-dasharray: 3 3; }
+.chart-marker text { fill: var(--text-muted); font-size: 12px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0; padding: 0; list-style: none; }
+.chart-legend li::before { content: ""; display: inline-block; width: 16px; height: 0; border-top: 3px solid currentColor; vertical-align: middle; margin-right: 6px; }
+.chart-legend li.dashed::before { border-top-style: dashed; }
+.chart-legend li span { color: var(--text-muted); }
+
+/* Inverse-problem demos */
+@media (min-width: 760px) {
+  .demo-panels.even { grid-template-columns: 1fr 1fr; }
+  .demo-panels.models { grid-template-columns: 1fr 1fr; max-width: 640px; }
+}
+.demo canvas[data-role="truth"], .demo canvas[data-role="current"] { aspect-ratio: 1; }
+.narrow { max-width: 312px; }
+.chart-block { margin: 16px 0 0; max-width: 640px; }
+.scenario-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.demo-readout { margin: 12px 0 0; padding: 8px 12px; border-radius: 4px; background: var(--bg); min-height: 1.6em; }
+.demo-readout.warning { background: var(--warn-bg); color: var(--warn-text); }
+.demo-readout:empty { display: none; }
+.demo button:disabled { opacity: 0.5; cursor: default; }

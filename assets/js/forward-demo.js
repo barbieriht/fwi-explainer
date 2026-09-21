@@ -7,8 +7,9 @@
   'use strict';
 
   const solver = window.FWI && window.FWI.solver;
+  const colormap = window.FWI && window.FWI.colormap;
   const root = document.getElementById('forward-demo');
-  if (!solver || !root) return;
+  if (!solver || !colormap || !root) return;
 
   const NX = 100;
   const NZ = 100;
@@ -82,19 +83,11 @@
 
   // ---------- colour mapping ----------
 
-  // Sequential ramp for velocity: slow = warm sand, fast = slate blue.
-  const SLOW_RGB = [236, 226, 204];
-  const FAST_RGB = [72, 96, 128];
-  const POS_RGB = [196, 58, 42];
-  const NEG_RGB = [33, 94, 176];
+  const POS_RGB = colormap.POS_RGB;
+  const NEG_RGB = colormap.NEG_RGB;
 
   function velocityRgb(model) {
-    const rgb = new Uint8ClampedArray(NX * NZ * 3);
-    for (let i = 0; i < model.length; i++) {
-      const t = Math.min(1, Math.max(0, (model[i] - VMIN) / (VMAX - VMIN)));
-      for (let c = 0; c < 3; c++) rgb[i * 3 + c] = SLOW_RGB[c] + t * (FAST_RGB[c] - SLOW_RGB[c]);
-    }
-    return rgb;
+    return colormap.velocityRgb(model, VMIN, VMAX);
   }
 
   // ---------- DOM ----------

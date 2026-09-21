@@ -6,6 +6,7 @@
   <title>Inverse Problem · FWI Explainer</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M2 16 Q6 4 10 16 T18 16 T26 16 T30 16%27 fill=%27none%27 stroke=%27%231f5fa8%27 stroke-width=%273%27/%3E%3C/svg%3E">
   <meta name="description" content="Interactive, in-browser explainer of seismic Full-Waveform Inversion and deep-learning approaches to it.">
+  <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/layout.css">
 </head>
@@ -26,10 +27,122 @@
   </header>
   <main id="content">
     <h1>Why FWI is hard</h1>
-    <p class="placeholder">This module is under construction.</p>
+    <p class="lede">Forward modeling turns a velocity model into data. Full-waveform inversion runs the other way: it starts from recorded data and searches for the model that would have produced it.</p>
+
+    <h2>Inversion as optimization</h2>
+    <p>FWI treats the velocity in every grid cell as an unknown. For a model \(\mathbf{m}\), we simulate every shot and measure how far the synthetic seismograms are from the observed ones with a least-squares <strong>misfit</strong>:</p>
+    \[ J(\mathbf{m}) = \frac{1}{2} \sum_{\text{shots}} \sum_{\text{receivers}} \int_0^T \big( d_{\text{syn}}(t; \mathbf{m}) - d_{\text{obs}}(t) \big)^2 \, dt. \]
+    <p>The demos below have 3,600 unknowns (a 60 × 60 grid). Field-scale 3D problems have hundreds of millions, so the model is found by iterative, gradient-based optimization rather than by searching:</p>
+    \[ \mathbf{m}_{k+1} = \mathbf{m}_k - \alpha_k \, \nabla J(\mathbf{m}_k). \]
+
+    <h2>Getting the gradient cheaply: the adjoint-state method</h2>
+    <p>Perturbing each cell one at a time to estimate \(\nabla J\) would take one simulation per unknown. The adjoint-state method gets the whole gradient from just two simulations per shot. The first is the ordinary forward simulation \(p\). The second, the adjoint field \(\lambda\), is driven by the data residuals injected at the receivers and run backward in time. Correlating the two gives the gradient with respect to slowness squared, \(m = 1/v^2\):</p>
+    \[ \frac{\partial J}{\partial m(\mathbf{x})} = -\int_0^T \lambda(\mathbf{x}, t)\, \frac{\partial^2 p}{\partial t^2}(\mathbf{x}, t)\, dt. \]
+    <p>This site's test suite checks the in-browser implementation against brute-force finite-difference perturbations. The two agree to within 0.2%.</p>
+    <p class="note">Adapted from standard adjoint-state formulations of the acoustic wave equation.</p>
+
+    <h2>Why it is hard: non-convexity and cycle-skipping</h2>
+    <p>The misfit is not a nice bowl. Seismic waveforms oscillate, so comparing them sample by sample rewards any alignment of peaks with peaks, including the wrong ones. If the starting model predicts an arrival more than <em>half a period</em> away from the observed one, gradient descent pulls it toward the neighbouring wiggle instead of the correct one. This is called <strong>cycle-skipping</strong>:</p>
+    \[ |\Delta t| > \frac{1}{2f} \quad\Rightarrow\quad \text{the nearest local minimum is the wrong one.} \]
+    <p>Low frequencies have long periods, so they tolerate larger timing errors. Real recordings, however, often contain little usable low-frequency energy. The problem is also <strong>ill-posed</strong>: sources and receivers only illuminate parts of the subsurface, so different models can fit the same data almost equally well.</p>
+
+    <p>Both demos use a <strong>crosswell</strong> layout: six sources down the left side of the model, thirty receivers down the right side. The true model is a 2000 m/s background with a faster (2400 m/s) circular body in the middle.</p>
+
+    <section class="demo wide" id="misfit-landscape" aria-labelledby="ml-title">
+      <h3 id="ml-title">Try it: the misfit landscape</h3>
+      <p>Here the "model" is a single number: the velocity of a homogeneous starting guess. For each guess we simulate the middle shot and compute the misfit against the observed data, with a 4 Hz and a 12 Hz source.</p>
+      <div class="demo-panels even">
+        <figure>
+          <div data-role="landscape-chart"></div>
+          <ul class="chart-legend"><li class="series-a"><span>4 Hz data</span></li><li class="series-b"><span>12 Hz data</span></li></ul>
+          <figcaption>Misfit versus starting velocity (each curve divided by its maximum). The 12 Hz curve has side valleys: local minima where gradient descent can get stuck.</figcaption>
+        </figure>
+        <figure>
+          <div data-role="trace-chart"></div>
+          <ul class="chart-legend"><li class="series-a"><span>observed</span></li><li class="series-b dashed"><span>modeled from your guess</span></li></ul>
+          <figcaption>Recording at the receiver facing the middle source.</figcaption>
+        </figure>
+      </div>
+      <div class="controls">
+        <label class="control"><span class="label">Starting velocity: <span data-role="v0-value"></span></span>
+          <input type="range" data-role="v0">
+        </label>
+        <fieldset>
+          <legend>Trace frequency</legend>
+          <label><input type="radio" name="ml-freq" value="4"> 4 Hz</label>
+          <label><input type="radio" name="ml-freq" value="12" checked> 12 Hz</label>
+        </fieldset>
+        <button type="button" data-role="start">Compute landscape</button>
+      </div>
+      <p class="demo-readout" data-role="readout" aria-live="polite"></p>
+      <p class="demo-status" data-role="status">The landscape is computed when this section scrolls into view (about 50 small simulations).</p>
+    </section>
+
+    <section class="demo wide" id="inversion-demo" aria-labelledby="inv-title">
+      <h3 id="inv-title">Try it: run FWI from a wrong starting model</h3>
+      <div class="scenario-row" role="group" aria-label="Scenarios">
+        <button type="button" data-scenario="good">Good start (2000 m/s, 12 Hz)</button>
+        <button type="button" data-scenario="skipped">Cycle-skipped (1700 m/s, 12 Hz)</button>
+        <button type="button" data-scenario="multiscale">Fix: low → high frequency (1700 m/s)</button>
+      </div>
+      <div class="demo-panels models">
+        <figure>
+          <canvas data-role="truth" role="img" aria-label="True velocity model" aria-describedby="inv-truth-desc"></canvas>
+          <figcaption id="inv-truth-desc">True model (used only to generate the observed data). Orange triangles: sources; dark squares: receivers.</figcaption>
+        </figure>
+        <figure>
+          <canvas data-role="current" role="img" aria-label="Current inverted velocity model" aria-describedby="inv-current-desc"></canvas>
+          <figcaption id="inv-current-desc">Current estimate, updated after every iteration. Same colour scale as the true model.</figcaption>
+        </figure>
+      </div>
+      <div class="axis-label narrow" aria-hidden="true"><span>1500 m/s</span><span>3000 m/s</span></div>
+      <div class="legend-bar narrow" aria-hidden="true"></div>
+      <figure class="chart-block">
+        <div data-role="misfit-chart"></div>
+        <figcaption>Misfit relative to its value at the start of each frequency band. In the low → high run it jumps back to 1 at the switch, because it is measured on different data from then on.</figcaption>
+      </figure>
+      <div class="controls">
+        <label class="control"><span class="label">Starting velocity: <span data-role="v0-value"></span></span>
+          <input type="range" data-role="v0">
+        </label>
+        <fieldset>
+          <legend>Data used</legend>
+          <label><input type="radio" name="inv-band" value="low"> 4 Hz only</label>
+          <label><input type="radio" name="inv-band" value="high" checked> 12 Hz only</label>
+          <label><input type="radio" name="inv-band" value="multi"> 4 Hz, then 12 Hz</label>
+        </fieldset>
+        <div class="button-row">
+          <button type="button" class="primary" data-role="run" aria-pressed="false">Run</button>
+          <button type="button" data-role="step">One iteration</button>
+          <button type="button" data-role="reset">Reset</button>
+        </div>
+      </div>
+      <p class="demo-status"><span data-role="progress"></span> · <span data-role="status" aria-live="polite"></span></p>
+    </section>
+
+    <h2>What to look for</h2>
+    <ul>
+      <li><strong>Good start:</strong> the background is already right, the misfit falls steadily, and the fast body appears in the right place.</li>
+      <li><strong>Cycle-skipped:</strong> starting 15% too slow, the 12 Hz misfit stalls well above zero. The estimate fills with stripes and velocities hit the allowed limits. It is fitting the wrong wiggles.</li>
+      <li><strong>Low → high frequency:</strong> from the same bad start, the 4 Hz stage first corrects the smooth background, which brings most arrivals within half a 12 Hz period. The 12 Hz stage then sharpens the fast body. The result is far better than the cycle-skipped run but not as clean as the good start: some stripes remain and the 12 Hz misfit levels off around 20%.</li>
+    </ul>
+    <p class="note">Simplifications: the observed data come from the same solver and grid used for inversion, with no noise. Real data are noisier and never match the physics exactly, which makes every one of these problems harder.</p>
+
+    <p>Iterative FWI solves a new optimization problem for every survey and depends on a good starting model. The next module looks at methods that <a href="deep-learning.html">learn the mapping from data to model instead</a>.</p>
   </main>
   <footer class="site-footer">
     <p>Built by Thiago Barbieri as part of ongoing PhD research in AI at the University of São Paulo (USP). <a href="https://github.com/barbieriht">GitHub</a> · <a href="https://www.linkedin.com/in/barbieriht/">LinkedIn</a></p>
   </footer>
+  <script src="assets/vendor/katex/katex.min.js" defer></script>
+  <script src="assets/vendor/katex/auto-render.min.js" defer></script>
+  <script src="assets/vendor/d3/d3.min.js" defer></script>
+  <script src="assets/js/math.js" defer></script>
+  <script src="assets/js/solver.js" defer></script>
+  <script src="assets/js/inversion.js" defer></script>
+  <script src="assets/js/colormap.js" defer></script>
+  <script src="assets/js/charts.js" defer></script>
+  <script src="assets/js/inverse-setup.js" defer></script>
+  <script src="assets/js/inverse-landscape.js" defer></script>
+  <script src="assets/js/inverse-demo.js" defer></script>
 </body>
 </html>
