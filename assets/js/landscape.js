@@ -12,15 +12,15 @@
   if (!root || !data || !window.d3) return;
 
   const LANES = [
-    { key: 'classical', label: 'Classical FWI', className: 'lane-classical',
+    { key: 'classical', labelKey: 'ls.classical', className: 'lane-classical',
       test: function (r) { return r.group === 'classical'; } },
-    { key: 'model', label: 'Survey: network generates the model', className: 'lane-survey',
+    { key: 'model', labelKey: 'ls.model', className: 'lane-survey',
       test: function (r) { return r.group === 'survey' && r.insertion === 'model'; } },
-    { key: 'data', label: 'Survey: network compares the data', className: 'lane-survey',
+    { key: 'data', labelKey: 'ls.data', className: 'lane-survey',
       test: function (r) { return r.group === 'survey' && r.insertion === 'data'; } },
-    { key: 'prior', label: 'Survey: network acts as a prior', className: 'lane-survey',
+    { key: 'prior', labelKey: 'ls.prior', className: 'lane-survey',
       test: function (r) { return r.group === 'survey' && r.insertion === 'prior'; } },
-    { key: 'ml-native', label: 'Machine-learning-oriented work', className: 'lane-ml',
+    { key: 'ml-native', labelKey: 'ls.ml', className: 'lane-ml',
       test: function (r) { return r.group === 'ml-native'; } },
   ];
   // Years before the break are compressed so the dense recent years get room.
@@ -41,7 +41,7 @@
   }
 
   function shortAuthors(authors) {
-    return authors.length > MAX_AUTHORS ? authors.slice(0, MAX_AUTHORS).join(', ') + ' et al.' : authors.join(', ');
+    return authors.length > MAX_AUTHORS ? authors.slice(0, MAX_AUTHORS).join(', ') + ' ' + window.FWI.i18n.t('ls.etAl') : authors.join(', ');
   }
 
   function citationLine(ref) {
@@ -52,6 +52,9 @@
   }
 
   window.FWI.sections.whenOpen(root, function mount() {
+    const t = window.FWI.i18n.t;
+    const num = window.FWI.i18n.num;
+    const tagName = window.FWI.i18n.tag;
     const d3 = window.d3;
     const refs = data.references.map(function (r) { return Object.assign({ lane: laneOf(r) }, r); })
       .filter(function (r) { return r.lane; });
@@ -102,13 +105,13 @@
       .attr('viewBox', '0 0 ' + width + ' ' + height)
       .attr('class', 'chart landscape-chart')
       .attr('role', 'group')
-      .attr('aria-label', 'Timeline of the bibliography: one row per group, one dot per paper. The list below the chart contains the same papers.');
+      .attr('aria-label', t('ls.aria'));
     const plot = svg.append('g').attr('transform', 'translate(' + MARGIN.left + ',' + MARGIN.top + ')');
 
     LANES.forEach(function (lane, i) {
       const g = plot.append('g').attr('class', 'lane');
       if (i > 0) g.append('line').attr('class', 'lane-rule').attr('x1', 0).attr('x2', innerW).attr('y1', laneTop[i]).attr('y2', laneTop[i]);
-      g.append('text').attr('class', 'lane-label').attr('x', 0).attr('y', laneTop[i] + 13).text(lane.label);
+      g.append('text').attr('class', 'lane-label').attr('x', 0).attr('y', laneTop[i] + 13).text(t(lane.labelKey));
     });
 
     const ticks = (width < NARROW_WIDTH ? [1984, 2005] : [1984, 1995, 2005, 2015])
@@ -134,7 +137,7 @@
 
     // ---------- legend and filters ----------
 
-    [['lane-classical', 'Classical FWI'], ['lane-survey', 'Deep-learning FWI survey'], ['lane-ml', 'Machine-learning-oriented work']]
+    [['lane-classical', t('ls.classical')], ['lane-survey', t('ls.legendSurvey')], ['lane-ml', t('ls.ml')]]
       .forEach(function (item) {
         const li = document.createElement('li');
         li.className = 'legend-dot ' + item[0];
@@ -157,14 +160,14 @@
       });
       el.filters.appendChild(button);
     }
-    filterButton('All topics', null);
-    data.tags.filter(function (t) { return refs.some(function (r) { return r.tags.includes(t); }); })
-      .forEach(function (t) { filterButton(t, t); });
+    filterButton(t('ls.allTopics'), null);
+    data.tags.filter(function (tag) { return refs.some(function (r) { return r.tags.includes(tag); }); })
+      .forEach(function (tag) { filterButton(tagName(tag), tag); });
 
     // ---------- detail and list ----------
 
     function isShown(r) {
-      return state.active.size === 0 || r.tags.some(function (t) { return state.active.has(t); });
+      return state.active.size === 0 || r.tags.some(function (tag) { return state.active.has(tag); });
     }
 
     function renderDetail() {
@@ -179,19 +182,19 @@
       meta.textContent = shortAuthors(r.authors) + ' · ' + citationLine(r);
       const where = document.createElement('p');
       where.className = 'paper-meta';
-      where.textContent = r.lane.label + (r.tags.length ? ' · Topics: ' + r.tags.join(', ') : '');
+      where.textContent = t(r.lane.labelKey) + (r.tags.length ? ' · ' + t('ls.topics') + ': ' + r.tags.map(tagName).join(', ') : '');
       el.detail.append(title, meta, where);
       if (r.link) {
         const a = document.createElement('a');
         a.href = r.link;
-        a.textContent = r.doi ? 'Open publication (doi:' + r.doi + ')' : 'Open on arXiv';
+        a.textContent = r.doi ? t('ls.openDoi', { doi: r.doi }) : t('ls.openArxiv');
         a.rel = 'noopener';
         el.detail.appendChild(a);
       }
       if (!r.verified) {
         const note = document.createElement('p');
         note.className = 'paper-note';
-        note.textContent = 'Some bibliographic fields of this entry have not yet been checked against the publisher record.';
+        note.textContent = t('ls.unverified');
         el.detail.appendChild(note);
       }
     }
@@ -222,8 +225,9 @@
         const on = b.dataset.tag ? state.active.has(b.dataset.tag) : state.active.size === 0;
         b.setAttribute('aria-pressed', String(on));
       });
-      el.count.textContent = 'Showing ' + shown.length + ' of ' + refs.length + ' papers' +
-        (state.active.size ? ' tagged ' + Array.from(state.active).join(' or ') : '') + '.';
+      el.count.textContent = state.active.size
+        ? t('ls.countTagged', { shown: shown.length, total: refs.length, tags: Array.from(state.active).map(tagName).join(t('ls.or')) })
+        : t('ls.count', { shown: shown.length, total: refs.length });
       renderList(shown);
       renderDetail();
     }

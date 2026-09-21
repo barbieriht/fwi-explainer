@@ -4,11 +4,17 @@ An interactive, in-browser explainer of seismic Full-Waveform Inversion (FWI)
 and deep-learning approaches to it. Everything runs client-side; the site is
 plain HTML/CSS/JS with no build step and no network requests at runtime.
 
-It is a single page (`index.html`) with collapsible sections: forward
-modeling, the inverse problem, deep learning, research landscape, open
-problems and references. Each interactive demo starts only when its section
-is opened, and any section or reference can be linked directly
-(e.g. `index.html#inverse-problem`).
+It is a single page with collapsible sections: forward modeling, the inverse
+problem, deep learning, research landscape, open problems and references.
+Each interactive demo starts only when its section is opened, and any section
+or reference can be linked directly (e.g. `index.html#inverse-problem`).
+
+The site is bilingual: `index.html` (English) and `index.pt.html`
+(Portuguese), switched with the EN/PT control in the header, which keeps the
+current section. The two files are maintained side by side: edit the prose in
+both, and keep their structure identical (tests compare ids, controls,
+scripts and citations). Strings produced by the demos at runtime live in
+`assets/js/i18n.js`.
 
 > Status: all sections are live; polishing is in progress.
 
@@ -40,7 +46,7 @@ from hand-typed entries:
 #    and the machine-learning-oriented line) from the thesis .bib
 node scripts/import-literature.js "/path/to/Overleaf Project/references.bib"
 
-# 2. Fill the generated parts of index.html
+# 2. Fill the generated parts of index.html and index.pt.html
 node scripts/build-page.js          # rewrite
 node scripts/build-page.js --check  # fail if out of date (also a test)
 ```
@@ -50,7 +56,7 @@ node scripts/build-page.js --check  # fail if out of date (also a test)
   verified, and derives topic tags from titles with explicit keyword rules.
   It writes `assets/data/literature.json` and a `literature.js` twin, so the
   page also works when opened from disk.
-- In `index.html`, prose is hand-written. Lists of papers are written as
+- In both pages, prose is hand-written. Lists of papers are written as
   `<span class="cite-list" data-cite-list="tag=uncertainty">` and inline
   citations as `<a class="cite" data-cite="id">`. `build-page.js` fills
   both from the data, then generates the References section, listing
@@ -59,7 +65,8 @@ node scripts/build-page.js --check  # fail if out of date (also a test)
   references that are not in the thesis bibliography.
 
 Tests fail if a citation does not resolve, if a tag does not follow from its
-title, or if `index.html` is out of date.
+title, if either page is out of date, or if the two language versions drift
+apart structurally.
 
 ## Deep-learning comparison (offline)
 

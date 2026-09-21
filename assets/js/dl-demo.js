@@ -10,19 +10,16 @@
   const data = window.FWI_DATA && window.FWI_DATA.dlComparison;
   if (!root) return;
   if (!data) {
-    root.querySelector('[data-role="status"]').textContent = 'Comparison data not found. Run scripts/dl/compare.py.';
+    root.querySelector('[data-role="status"]').textContent = window.FWI.i18n.t('dl.missing');
     return;
   }
 
   // Build the demo only when its section is first opened.
   window.FWI.sections.whenOpen(root, function mount() {
+    const t = window.FWI.i18n.t;
+    const num = window.FWI.i18n.num;
     const IMG_DIR = 'assets/img/dl/';
-    const LABELS = {
-      true: 'True model',
-      start: 'Starting model (for FWI)',
-      fwi: 'Classical FWI',
-      dl: 'Deep learning',
-    };
+    const LABELS = { true: t('dl.true'), start: t('dl.start'), fwi: t('dl.fwi'), dl: t('dl.dl') };
 
     const el = {
       cases: root.querySelectorAll('[data-case]'),
@@ -61,19 +58,19 @@
     }
 
     function formatSeconds(s) {
-      return s < 1 ? (1000 * s).toFixed(0) + ' ms' : s.toFixed(0) + ' s';
+      return s < 1 ? num(1000 * s) + ' ms' : num(s) + ' s';
     }
 
     function renderMetrics() {
       const m = data.cases[state.caseName];
       const rows = [
         ['start', m.mae_mps.start, '—'],
-        ['fwi', m.mae_mps.fwi, formatSeconds(m.seconds.fwi) + ' (' + m.fwi_iterations + ' iterations)'],
-        ['dl', m.mae_mps.dl, formatSeconds(m.seconds.dl) + ' (one forward pass)'],
+        ['fwi', m.mae_mps.fwi, t('dl.fwiTime', { time: formatSeconds(m.seconds.fwi), n: m.fwi_iterations })],
+        ['dl', m.mae_mps.dl, t('dl.dlTime', { time: formatSeconds(m.seconds.dl) })],
       ];
       el.metrics.replaceChildren.apply(el.metrics, rows.map(function (r) {
         const tr = document.createElement('tr');
-        [LABELS[r[0]], r[1].toFixed(0) + ' m/s', r[2]].forEach(function (text, i) {
+        [LABELS[r[0]], num(r[1]) + ' m/s', r[2]].forEach(function (text, i) {
           const cell = document.createElement(i === 0 ? 'th' : 'td');
           if (i === 0) cell.scope = 'row';
           cell.textContent = text;
@@ -96,10 +93,10 @@
     el.position.addEventListener('input', renderSlider);
 
     const FORMATS = {
-      mps: function (v) { return Math.round(v) + ' m/s'; },
+      mps: function (v) { return num(v) + ' m/s'; },
       ms: function (v) { return Math.max(1, Math.round(1000 * v)) + ' ms'; },
-      minutes: function (v) { return (v / 60).toFixed(1) + ' minutes'; },
-      thousands: function (v) { return Number(v).toLocaleString('en-US'); },
+      minutes: function (v) { return t('dl.minutes', { n: num(v / 60, 1) }); },
+      thousands: function (v) { return num(v); },
     };
 
     // Fill <span data-fill="path.to.value" data-format="..."> from the data, so

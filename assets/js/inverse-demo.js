@@ -13,6 +13,8 @@
 
   // Build the demo only when its section is first opened.
   window.FWI.sections.whenOpen(root, function mount() {
+    const t = window.FWI.i18n.t;
+    const num = window.FWI.i18n.num;
     const MAX_ITERATIONS = 30;
     const MULTISCALE_SWITCH = 10; // iterations at low frequency before switching
     const MODEL_CANVAS_PX = 300;
@@ -46,9 +48,9 @@
     });
 
     const chart = FWI.charts.createLineChart(el.chart, {
-      height: 220, xLabel: 'Iteration', yLabel: 'Misfit / starting misfit',
+      height: 220, xLabel: t('inv.xLabel'), yLabel: t('inv.yLabel'),
       xDomain: [0, MAX_ITERATIONS], yDomain: [0, 1.05], xTicks: 6,
-      ariaLabel: 'Misfit versus iteration',
+      ariaLabel: t('inv.aria'),
     });
 
     const truth = setup.trueModel();
@@ -102,7 +104,7 @@
       const series = run ? run.segments.map(function (points, i) {
         return { className: i === 0 && run.band !== 'high' ? 'series-a' : 'series-b', points: points };
       }) : [];
-      const markers = run && run.switchAt !== null ? [{ x: run.switchAt, label: 'switch to ' + setup.HIGH_HZ + ' Hz' }] : [];
+      const markers = run && run.switchAt !== null ? [{ x: run.switchAt, label: t('inv.switch', { f: setup.HIGH_HZ }) }] : [];
       chart.update(series, markers);
     }
 
@@ -119,12 +121,13 @@
       renderChart();
       const run = state.run;
       if (!run || run.iteration === 0) {
-        el.progress.textContent = 'Iteration 0 of ' + MAX_ITERATIONS;
+        el.progress.textContent = t('inv.progressZero', { max: MAX_ITERATIONS });
         return;
       }
       const h = run.inversion.history;
-      el.progress.textContent = 'Iteration ' + run.iteration + ' of ' + MAX_ITERATIONS + ' · ' + run.freq +
-        ' Hz · misfit at ' + (100 * h[h.length - 1] / h[0]).toFixed(1) + '% of its starting value';
+      el.progress.textContent = t('inv.progress', {
+        i: run.iteration, max: MAX_ITERATIONS, f: run.freq, pct: num(100 * h[h.length - 1] / h[0], 1),
+      });
     }
 
     // ---------- run loop ----------
@@ -150,16 +153,16 @@
         finishIteration(run);
         if (run.iteration >= MAX_ITERATIONS) {
           setPlaying(false);
-          el.status.textContent = 'Finished ' + MAX_ITERATIONS + ' iterations.';
+          el.status.textContent = t('inv.finished', { max: MAX_ITERATIONS });
           return;
         }
         if (state.stopAfterIteration) {
           setPlaying(false);
-          el.status.textContent = 'Paused after one iteration.';
+          el.status.textContent = t('inv.pausedOne');
           return;
         }
       } else {
-        el.status.textContent = 'Computing gradient and line search… (shot ' + (r.value + 1) + ' of ' + setup.GEOMETRIES[run.geometry].shots.length + ')';
+        el.status.textContent = t('inv.computing', { s: r.value + 1, n: setup.GEOMETRIES[run.geometry].shots.length });
       }
       setTimeout(pump, 0);
     }
@@ -168,15 +171,15 @@
       const alreadyRunning = state.playing;
       state.playing = on;
       state.stopAfterIteration = Boolean(singleIteration);
-      el.run.textContent = on && !singleIteration ? 'Pause' : 'Run';
+      el.run.textContent = on && !singleIteration ? t('common.pause') : t('common.run');
       el.run.setAttribute('aria-pressed', String(on && !singleIteration));
       if (!on) {
-        el.status.textContent = 'Paused.';
+        el.status.textContent = t('common.paused');
         return;
       }
       if (alreadyRunning) return; // the existing pump loop picks up the new mode
       if (!state.run || state.run.iteration >= MAX_ITERATIONS) {
-        el.status.textContent = 'Simulating observed data…';
+        el.status.textContent = t('inv.simulating');
         state.run = createRun();
       }
       setTimeout(pump, 0);
@@ -197,18 +200,18 @@
       el.v0Value.textContent = s.v0 + ' m/s';
       el.bands.forEach(function (r) { r.checked = r.value === s.band; });
       el.geometries.forEach(function (r) { r.checked = r.value === s.geometry; });
-      reset('Scenario loaded. Press Run.');
+      reset(t('inv.scenario'));
     }
 
     el.run.addEventListener('click', function () { setPlaying(!(state.playing && !state.stopAfterIteration)); });
     el.step.addEventListener('click', function () { if (!state.playing) setPlaying(true, true); });
-    el.reset.addEventListener('click', function () { reset('Reset. Press Run to start again.'); });
+    el.reset.addEventListener('click', function () { reset(t('inv.reset')); });
     el.v0.addEventListener('input', function () {
       el.v0Value.textContent = el.v0.value + ' m/s';
-      reset('Starting model changed. Press Run.');
+      reset(t('inv.v0Changed'));
     });
-    el.bands.forEach(function (r) { r.addEventListener('change', function () { reset('Frequency band changed. Press Run.'); }); });
-    el.geometries.forEach(function (r) { r.addEventListener('change', function () { reset('Acquisition geometry changed. Press Run.'); }); });
+    el.bands.forEach(function (r) { r.addEventListener('change', function () { reset(t('inv.bandChanged')); }); });
+    el.geometries.forEach(function (r) { r.addEventListener('change', function () { reset(t('inv.geometryChanged')); }); });
     el.scenarios.forEach(function (b) {
       b.addEventListener('click', function () { applyScenario(b.dataset.scenario); });
     });

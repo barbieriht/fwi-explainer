@@ -216,3 +216,11 @@ details.section > summary:focus-visible { outline: 2px solid var(--accent); outl
 .problem-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 16px 12px; background: var(--bg); }
 .problem-card h3 { margin-top: 12px; font-size: 1.05rem; }
 .card-refs { font-size: 0.9rem; color: var(--text-muted); }
+
+/* Language switch */
+.lang-switch { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-left: 4px; }
+.lang-switch a { padding: 2px 10px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-decoration: none; }
+.lang-switch a + a { border-left: 1px solid var(--border); }
+.lang-switch a[aria-current="true"] { background: var(--accent); color: var(--accent-contrast); }
+.lang-switch a:not([aria-current="true"]):hover { color: var(--accent); }
+@media (max-width: 600px) { .site-nav .brand { margin-right: auto; } }

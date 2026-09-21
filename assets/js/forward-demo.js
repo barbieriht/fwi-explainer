@@ -13,6 +13,8 @@
 
   // Build the demo only when its section is first opened.
   window.FWI.sections.whenOpen(root, function mount() {
+    const t = window.FWI.i18n.t;
+    const num = window.FWI.i18n.num;
     const NX = 100;
     const NZ = 100;
     const DX = 10; // m
@@ -244,8 +246,8 @@
     }
 
     function drawClock() {
-      const t = state.sim ? state.sim.it * DT : 0;
-      el.clock.textContent = 't = ' + t.toFixed(3) + ' s of ' + (NT * DT).toFixed(2) + ' s';
+      const time = state.sim ? state.sim.it * DT : 0;
+      el.clock.textContent = t('fm.clock', { t: num(time, 3), total: num(NT * DT, 2) });
     }
 
     function render() {
@@ -270,7 +272,7 @@
       for (let s = 0; s < steps && sim.step(); s++) { /* advance */ }
       if (sim.done) {
         setPlaying(false);
-        announce('Simulation finished. The full shot gather is shown on the right.');
+        announce(t('fm.finished'));
       }
     }
 
@@ -283,11 +285,11 @@
 
     function setPlaying(on) {
       state.playing = on;
-      el.play.textContent = on ? 'Pause' : 'Play';
+      el.play.textContent = on ? t('common.pause') : t('common.play');
       el.play.setAttribute('aria-pressed', String(on));
       if (on) {
         if (state.sim && state.sim.done) state.sim = null;
-        announce('Simulation running.');
+        announce(t('fm.running'));
         requestAnimationFrame(loop);
       }
     }
@@ -320,12 +322,12 @@
       const cell = cellFromPointer(event);
       if (currentMode() === 'source') {
         state.source = cell;
-        resetSimulation('Source moved. Press Play to run.');
+        resetSimulation(t('fm.sourceMoved'));
         return;
       }
       state.model = paintDisc(state.model, cell.ix, cell.iz, Number(el.brush.value));
       state.colors = velocityRgb(state.model);
-      if (state.sim) resetSimulation('Model edited. Press Play to run.');
+      if (state.sim) resetSimulation(t('fm.modelEdited'));
       else drawModelFrame();
     }
 
@@ -344,7 +346,7 @@
     el.preset.addEventListener('change', function () {
       state.model = PRESETS[el.preset.value]();
       state.colors = velocityRgb(state.model);
-      resetSimulation('Loaded the ' + el.preset.selectedOptions[0].textContent + ' model.');
+      resetSimulation(t('fm.loaded', { name: el.preset.selectedOptions[0].textContent }));
     });
     el.brush.addEventListener('input', function () {
       el.brushValue.textContent = el.brush.value + ' m/s';
@@ -356,7 +358,7 @@
       advance(STEP_BUTTON_STEPS);
       render();
     });
-    el.reset.addEventListener('click', function () { resetSimulation('Simulation reset.'); });
+    el.reset.addEventListener('click', function () { resetSimulation(t('fm.reset')); });
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) setPlaying(false);
     });

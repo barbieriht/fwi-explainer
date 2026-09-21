@@ -13,6 +13,8 @@
 
   // Build the demo only when its section is first opened.
   window.FWI.sections.whenOpen(root, function mount() {
+    const t = window.FWI.i18n.t;
+    const num = window.FWI.i18n.num;
     const V_START = 1500;
     const V_STOP = 2600;
     const V_STEP = 50;
@@ -37,14 +39,14 @@
     };
 
     const landscapeChart = FWI.charts.createLineChart(el.landscape, {
-      height: 240, xLabel: 'Starting velocity (m/s)', yLabel: 'Misfit (normalized)',
+      height: 240, xLabel: t('ml.xLabel'), yLabel: t('ml.yLabel'),
       xDomain: [V_START, V_STOP], yDomain: [0, 1],
-      ariaLabel: 'Misfit versus starting velocity for 4 Hz and 12 Hz data',
+      ariaLabel: t('ml.aria'),
     });
     const traceChart = FWI.charts.createLineChart(el.trace, {
-      height: 240, xLabel: 'Time (s)', yLabel: 'Pressure (normalized)',
+      height: 240, xLabel: t('ml.traceX'), yLabel: t('ml.traceY'),
       xDomain: [0, setup.NT * setup.DT], yDomain: [-1, 1],
-      ariaLabel: 'Observed and modeled trace at the receiver facing the middle source',
+      ariaLabel: t('ml.traceAria'),
     });
 
     // results[f] = { misfit: number[], traces: Float32Array[], observed: Float32Array }
@@ -97,7 +99,7 @@
 
     function traceMax(traces) {
       let m = 0;
-      traces.forEach(function (t) { for (let i = 0; i < t.length; i++) m = Math.max(m, Math.abs(t[i])); });
+      traces.forEach(function (trace) { for (let i = 0; i < trace.length; i++) m = Math.max(m, Math.abs(trace[i])); });
       return m || 1;
     }
 
@@ -120,12 +122,12 @@
             points: normalized(results[freq].misfit).map(function (j, idx) { return [velocities[idx], j]; }),
           };
         }),
-        [{ x: setup.BACKGROUND, label: 'true' }, { x: v0, label: 'your guess' }]
+        [{ x: setup.BACKGROUND, label: t('ml.true') }, { x: v0, label: t('ml.guess') }]
       );
 
       const scale = 1 / traceMax([results[f].observed, results[f].traces[k]]);
-      const toPoints = function (t) {
-        return Array.from(t, function (value, it) { return [it * setup.DT, value * scale]; });
+      const toPoints = function (trace) {
+        return Array.from(trace, function (value, it) { return [it * setup.DT, value * scale]; });
       };
       traceChart.update([
         { className: 'series-a', points: toPoints(results[f].observed) },
@@ -136,9 +138,10 @@
       const shiftMs = 1000 * arrivalShift(results[setup.LOW_HZ].observed, results[setup.LOW_HZ].traces[k]);
       const halfPeriodMs = 1000 / (2 * f);
       const skipped = Math.abs(shiftMs) > halfPeriodMs;
-      el.readout.textContent = 'Modeled arrival is ' + Math.abs(shiftMs).toFixed(0) + ' ms ' +
-        (shiftMs >= 0 ? 'late' : 'early') + '. Half a period at ' + f + ' Hz is ' + halfPeriodMs.toFixed(0) +
-        ' ms, so this starting model is ' + (skipped ? 'cycle-skipped: the nearest wiggle to match is the wrong one.' : 'within reach: the matching wiggle is the right one.');
+      el.readout.textContent = t('ml.readout', {
+        shift: num(Math.abs(shiftMs)), direction: shiftMs >= 0 ? t('ml.late') : t('ml.early'),
+        f: f, half: num(halfPeriodMs), verdict: skipped ? t('ml.skipped') : t('ml.reach'),
+      });
       el.readout.classList.toggle('warning', skipped);
     }
 
@@ -150,12 +153,12 @@
       (function pump() {
         const r = steps.next();
         if (!r.done) {
-          el.status.textContent = 'Simulating… ' + Math.round(100 * r.value) + '%';
+          el.status.textContent = t('ml.progress', { pct: Math.round(100 * r.value) });
           setTimeout(pump, 0);
           return;
         }
         computed = true;
-        el.status.textContent = 'Ready. Drag the slider to change the starting velocity.';
+        el.status.textContent = t('ml.ready');
         el.start.hidden = true;
         render();
       })();

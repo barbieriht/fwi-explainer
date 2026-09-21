@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FWI Explainer — Português</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M2 16 Q6 4 10 16 T18 16 T26 16 T30 16%27 fill=%27none%27 stroke=%27%231f5fa8%27 stroke-width=%273%27/%3E%3C/svg%3E">
+  <meta name="description" content="Explicação interativa, no navegador, da inversão sísmica de forma de onda completa (FWI) e das abordagens de deep learning para ela.">
+  <link rel="alternate" hreflang="en" href="index.html">
+  <link rel="alternate" hreflang="pt-BR" href="index.pt.html">
+  <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Pular para o conteúdo</a>
+  <header class="site-header">
+    <nav class="site-nav" aria-label="Seções">
+      <a class="brand" href="#top">FWI Explainer</a>
+      <ul>
+        <li><a href="#forward-modeling">Modelagem direta</a></li>
+        <li><a href="#inverse-problem">O problema inverso</a></li>
+        <li><a href="#deep-learning">Entra o deep learning</a></li>
+        <li><a href="#research-landscape">Panorama da pesquisa</a></li>
+        <li><a href="#open-problems">Problemas em aberto</a></li>
+        <li><a href="#references">Referências</a></li>
+      </ul>
+      <div class="lang-switch" role="group" aria-label="Idioma" data-lang-switch>
+        <a href="index.html" hreflang="en" lang="en">EN</a>
+        <a href="index.pt.html" hreflang="pt-BR" lang="pt-BR" aria-current="true">PT</a>
+      </div>
+    </nav>
+  </header>
+  <main id="content">
+    <div id="top"></div>
+    <h1>Inversão de forma de onda completa, explicada de forma interativa</h1>
+    <p class="lede">A inversão de forma de onda completa (FWI, do inglês <em>Full-Waveform Inversion</em>) reconstrói um mapa da subsuperfície ajustando ondas sísmicas simuladas às registradas. É um método poderoso e notoriamente difícil de acertar. As seções abaixo mostram por quê, com simulações rodando ao vivo no seu navegador. Abra qualquer seção para ler.</p>
+    <div class="section-tools">
+      <button type="button" data-sections="expand">Expandir tudo</button>
+      <button type="button" data-sections="collapse">Recolher tudo</button>
+    </div>
+    <details class="section" id="forward-modeling">
+      <summary><h2 class="section-title">Modelagem direta</h2><span class="section-sub">A física de uma onda sísmica</span></summary>
+      <div class="section-body">
+        <p class="lede">Para inverter dados sísmicos, primeiro é preciso saber prevê-los. Dado um mapa de quão rápido o som se propaga no subsolo, como fica uma onda emitida na superfície quando ela chega aos sensores?</p>
+
+        <h3>Modelos de velocidade, fontes e receptores</h3>
+        <p>Um <strong>modelo de velocidade</strong> é um mapa da subsuperfície em que cada célula guarda a velocidade de uma onda de pressão naquele ponto, em metros por segundo. Sedimentos moles são lentos; rocha compactada é rápida. Onde a velocidade muda bruscamente, parte da energia da onda é refletida de volta para a superfície.</p>
+        <p>Num levantamento sísmico, uma <strong>fonte</strong> (um canhão de ar no mar, um caminhão vibrador em terra) envia um pulso curto para o subsolo, e uma linha de <strong>receptores</strong> registra a pressão ao longo do tempo. Colocando lado a lado o registro de cada receptor, com o tempo crescendo para baixo, obtém-se um <strong>sismograma de tiro</strong> (<em>shot gather</em>): o dado bruto que o FWI tenta explicar.</p>
+
+        <h3>A equação da onda acústica</h3>
+        <p>Num meio de densidade constante, o campo de pressão \(p(\mathbf{x}, t)\) obedece a</p>
+        \[ \frac{\partial^2 p}{\partial t^2} = v(\mathbf{x})^2\, \nabla^2 p + s(\mathbf{x}, t), \]
+        <p>em que \(v(\mathbf{x})\) é o modelo de velocidade e \(s\) é o termo de fonte. Simular dados a partir de um modelo conhecido dessa forma se chama <strong>modelagem direta</strong>.</p>
+
+        <section class="demo wide" id="forward-demo" aria-labelledby="fm-demo-title">
+          <h4 id="fm-demo-title">Experimente: propague uma onda pelo seu próprio modelo</h4>
+          <div class="demo-panels">
+            <figure>
+              <canvas data-role="model" role="img"
+                aria-label="Modelo de velocidade com o campo de onda desenhado por cima"
+                aria-describedby="fm-model-desc"></canvas>
+              <figcaption id="fm-model-desc">Modelo de velocidade (1 km × 1 km; claro = lento, escuro = rápido) com o campo de pressão sobreposto em vermelho (positivo) e azul (negativo). O triângulo laranja é a fonte; os quadradinhos escuros no topo são os receptores.</figcaption>
+              <div class="axis-label" aria-hidden="true"><span>1500 m/s</span><span>4500 m/s</span></div>
+              <div class="legend-bar" aria-hidden="true"></div>
+            </figure>
+            <figure>
+              <canvas data-role="gather" role="img"
+                aria-label="Sismograma registrado pelos receptores"
+                aria-describedby="fm-gather-desc"></canvas>
+              <figcaption id="fm-gather-desc">Sismograma de tiro: uma coluna por receptor (da esquerda para a direita na superfície), com o tempo correndo para baixo de 0 a 1 s. A primeira chegada, inclinada, é a onda direta; os eventos curvos abaixo dela são reflexões. As amplitudes recebem um ganho com o tempo apenas para exibição.</figcaption>
+            </figure>
+          </div>
+
+          <div class="controls">
+            <label class="control"><span class="label">Modelo pronto</span>
+              <select data-role="preset">
+                <option value="layered" selected>Três camadas</option>
+                <option value="anomaly">Anomalia circular</option>
+                <option value="dipping">Interface inclinada</option>
+                <option value="homogeneous">Homogêneo</option>
+              </select>
+            </label>
+            <fieldset>
+              <legend>Clicar no modelo</legend>
+              <label><input type="radio" name="fm-mode" value="source" checked> posiciona a fonte</label>
+              <label><input type="radio" name="fm-mode" value="paint"> pinta velocidade</label>
+            </fieldset>
+            <label class="control"><span class="label">Velocidade do pincel: <span data-role="brush-value"></span></span>
+              <input type="range" data-role="brush" step="100">
+            </label>
+            <label class="control"><span class="label">Velocidade da animação</span>
+              <select data-role="speed">
+                <option value="2">Lenta</option>
+                <option value="5" selected>Normal</option>
+                <option value="12">Rápida</option>
+              </select>
+            </label>
+            <div class="button-row">
+              <button type="button" class="primary" data-role="play" aria-pressed="false">Iniciar</button>
+              <button type="button" data-role="step">Avançar</button>
+              <button type="button" data-role="reset">Reiniciar</button>
+            </div>
+          </div>
+          <p class="demo-status"><span data-role="clock"></span> · <span data-role="status" aria-live="polite">Pressione Iniciar para disparar a fonte.</span></p>
+        </section>
+
+        <h3>O que observar</h3>
+        <ul>
+          <li>No modelo de três camadas, cada interface envia uma reflexão de volta para cima. No sismograma elas aparecem como eventos curvos (hipérboles), que chegam mais tarde quanto mais profunda é a interface.</li>
+          <li>Ao entrar numa camada mais rápida, a frente de onda se espalha mais depressa, o que também desvia (refrata) a direção de propagação.</li>
+          <li>Uma anomalia compacta espalha energia em todas as direções. Sua assinatura no sismograma é uma curva de difração centrada acima dela.</li>
+          <li>Experimente pintar uma zona lenta, de baixa velocidade, e compare quanto mais tarde chegam as reflexões dela.</li>
+        </ul>
+
+        <h3>Como a simulação funciona</h3>
+        <p>O navegador resolve a equação da onda numa malha de 100 × 100 células de 10 m com o método de diferenças finitas no domínio do tempo. As derivadas viram diferenças ponderadas entre células vizinhas, e o campo avança um pequeno passo de tempo \(\Delta t\) por vez:</p>
+        \[ p^{n+1}_{i,j} = 2p^{n}_{i,j} - p^{n-1}_{i,j} + v_{i,j}^2\,\Delta t^2\, \big(\nabla_h^2 p^{n}\big)_{i,j} + \Delta t^2\, s^{n}_{i,j}, \]
+        <p>em que \(\nabla_h^2\) é um laplaciano discreto de quarta ordem. O passo de tempo precisa satisfazer uma condição de estabilidade (CFL), \(v_{\max}\,\Delta t / \Delta x \le C\); caso contrário, os erros crescem exponencialmente. Aqui \(\Delta t\) é fixado para a maior velocidade que se pode pintar, então nenhuma edição torna a simulação instável. A fonte é uma wavelet de Ricker com frequência de pico de 15 Hz. Uma camada de amortecimento ("esponja") ao redor da malha absorve as ondas que saem dela, imitando um meio ilimitado <a class="cite" href="#cerjan1985" data-cite="cerjan1985">(Cerjan et al., 1985)</a>. Ela não é perfeita: resta uma reflexão residual fraca, de cerca de 3%.</p>
+        <p class="note">Adaptado de formulações padrão de diferenças finitas no domínio do tempo para a equação da onda acústica.</p>
+
+        <p>A modelagem direta responde "que dados este modelo produziria?". A próxima seção faz a pergunta inversa, bem mais difícil: <a href="#inverse-problem">dados os registros, que modelo os produziu?</a></p>
+      </div>
+    </details>
+    <details class="section" id="inverse-problem">
+      <summary><h2 class="section-title">O problema inverso</h2><span class="section-sub">Por que o FWI é difícil</span></summary>
+      <div class="section-body">
+        <p class="lede">A modelagem direta transforma um modelo de velocidade em dados. A inversão de forma de onda completa faz o caminho contrário: parte dos dados registrados e procura o modelo que os teria produzido <a class="cite" href="#tarantola1984" data-cite="tarantola1984">(Tarantola, 1984)</a>.</p>
+
+        <h3>Inversão como otimização</h3>
+        <p>O FWI trata a velocidade de cada célula da malha como uma incógnita. Para um modelo \(\mathbf{m}\), todos os tiros são simulados, e um <strong>misfit</strong> (desajuste) de mínimos quadrados mede quão longe os sismogramas sintéticos estão dos observados:</p>
+        \[ J(\mathbf{m}) = \frac{1}{2} \sum_{\text{tiros}} \sum_{\text{receptores}} \int_0^T \big( d_{\text{syn}}(t; \mathbf{m}) - d_{\text{obs}}(t) \big)^2 \, dt. \]
+        <p>As demonstrações abaixo já têm 3.600 incógnitas (uma malha de 60 × 60), e modelos 3D realistas têm muito mais. Buscar diretamente nesse espaço é inviável, então o FWI melhora o modelo iterativamente com otimização local baseada em gradiente <a class="cite" href="#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>:</p>
+        \[ \mathbf{m}_{k+1} = \mathbf{m}_k - \alpha_k \, \nabla J(\mathbf{m}_k). \]
+
+        <h3>O gradiente a baixo custo: o método do estado adjunto</h3>
+        <p>Perturbar cada célula, uma de cada vez, para estimar \(\nabla J\) custaria uma simulação por incógnita. O método do estado adjunto obtém o gradiente inteiro com apenas duas simulações por tiro. A primeira é a simulação direta comum, \(p\). A segunda, o campo adjunto \(\lambda\), é alimentada pelos resíduos dos dados injetados nos receptores e roda de trás para frente no tempo. Correlacionar as duas dá o gradiente em relação ao quadrado da vagarosidade, \(m = 1/v^2\) <a class="cite" href="#plessix2006" data-cite="plessix2006">(Plessix, 2006)</a>:</p>
+        \[ \frac{\partial J}{\partial m(\mathbf{x})} = -\int_0^T \lambda(\mathbf{x}, t)\, \frac{\partial^2 p}{\partial t^2}(\mathbf{x}, t)\, dt. \]
+        <p>Os testes automáticos deste site comparam a implementação no navegador com perturbações por diferenças finitas feitas por força bruta. As duas concordam com erro abaixo de 0,2%.</p>
+        <p class="note">Adaptado de formulações padrão do método do estado adjunto para a equação da onda acústica.</p>
+
+        <h3>Por que é difícil: não convexidade e cycle-skipping</h3>
+        <p>O misfit não tem o formato de uma tigela bem comportada. As formas de onda sísmicas oscilam, então compará-las amostra por amostra premia qualquer alinhamento de pico com pico, inclusive os errados. Se o modelo inicial prevê uma chegada a mais de <em>meio período</em> da observada, a descida do gradiente a puxa para a oscilação vizinha em vez da correta. Isso se chama <strong>cycle-skipping</strong> (salto de ciclo) <a class="cite" href="#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>:</p>
+        \[ |\Delta t| > \frac{1}{2f} \quad\Rightarrow\quad \text{o mínimo local mais próximo é o errado.} \]
+        <p>Frequências baixas têm períodos longos, então toleram erros de tempo maiores. Registros reais, porém, costumam ter pouca energia utilizável em baixa frequência <a class="cite" href="#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>. O problema também é <strong>mal-posto</strong>: fontes e receptores iluminam só partes da subsuperfície, então modelos diferentes podem ajustar os mesmos dados quase igualmente bem.</p>
+
+        <p>As duas demonstrações usam por padrão uma geometria <strong>entre poços</strong> (<em>crosswell</em>): seis fontes descendo pelo lado esquerdo do modelo e trinta receptores pelo lado direito. O modelo real tem fundo de 2000 m/s com um corpo circular mais rápido (2400 m/s) no centro. A demonstração de inversão também permite acrescentar fontes e receptores no topo e na base.</p>
+
+        <section class="demo wide" id="misfit-landscape" aria-labelledby="ml-title">
+          <h4 id="ml-title">Experimente: a paisagem do misfit</h4>
+          <p>Aqui o "modelo" é um único número: a velocidade de um chute inicial homogêneo. Para cada chute, o tiro central é simulado e seu misfit em relação aos dados observados é calculado, com uma fonte de 4 Hz e outra de 12 Hz.</p>
+          <div class="demo-panels even">
+            <figure>
+              <div data-role="landscape-chart"></div>
+              <ul class="chart-legend"><li class="series-a"><span>dados de 4 Hz</span></li><li class="series-b"><span>dados de 12 Hz</span></li></ul>
+              <figcaption>Misfit em função da velocidade inicial (cada curva dividida pelo seu máximo). A curva de 12 Hz tem vales laterais: mínimos locais onde a descida do gradiente pode ficar presa.</figcaption>
+            </figure>
+            <figure>
+              <div data-role="trace-chart"></div>
+              <ul class="chart-legend"><li class="series-a"><span>observado</span></li><li class="series-b dashed"><span>modelado a partir do seu chute</span></li></ul>
+              <figcaption>Registro no receptor em frente à fonte central.</figcaption>
+            </figure>
+          </div>
+          <div class="controls">
+            <label class="control"><span class="label">Velocidade inicial: <span data-role="v0-value"></span></span>
+              <input type="range" data-role="v0">
+            </label>
+            <fieldset>
+              <legend>Frequência do traço</legend>
+              <label><input type="radio" name="ml-freq" value="4"> 4 Hz</label>
+              <label><input type="radio" name="ml-freq" value="12" checked> 12 Hz</label>
+            </fieldset>
+            <button type="button" data-role="start">Calcular a paisagem</button>
+          </div>
+          <p class="demo-readout" data-role="readout" aria-live="polite"></p>
+          <p class="demo-status" data-role="status">A paisagem é calculada quando esta parte aparece na tela (cerca de 50 simulações pequenas).</p>
+        </section>
+
+        <section class="demo wide" id="inversion-demo" aria-labelledby="inv-title">
+          <h4 id="inv-title">Experimente: rode o FWI a partir de um modelo inicial errado</h4>
+          <div class="scenario-row" role="group" aria-label="Cenários">
+            <button type="button" data-scenario="good">Bom início (2000 m/s, 12 Hz)</button>
+            <button type="button" data-scenario="skipped">Com cycle-skipping (1700 m/s, 12 Hz)</button>
+            <button type="button" data-scenario="multiscale">Solução 1: de baixa para alta frequência (1700 m/s)</button>
+            <button type="button" data-scenario="surround">Solução 2: fontes e receptores em todos os lados (1700 m/s, 12 Hz)</button>
+          </div>
+          <div class="demo-panels models">
+            <figure>
+              <canvas data-role="truth" role="img" aria-label="Modelo de velocidade real" aria-describedby="inv-truth-desc"></canvas>
+              <figcaption id="inv-truth-desc">Modelo real (usado só para gerar os dados observados). Círculos laranja: fontes; quadrados escuros: receptores.</figcaption>
+            </figure>
+            <figure>
+              <canvas data-role="current" role="img" aria-label="Modelo de velocidade invertido atual" aria-describedby="inv-current-desc"></canvas>
+              <figcaption id="inv-current-desc">Estimativa atual, atualizada a cada iteração. Mesma escala de cores do modelo real.</figcaption>
+            </figure>
+          </div>
+          <div class="axis-label narrow" aria-hidden="true"><span>1500 m/s</span><span>3000 m/s</span></div>
+          <div class="legend-bar narrow" aria-hidden="true"></div>
+          <figure class="chart-block">
+            <div data-role="misfit-chart"></div>
+            <figcaption>Misfit relativo ao seu valor no início de cada banda de frequência. Na execução de baixa para alta frequência ele volta a 1 na troca, porque a partir daí é medido sobre outros dados.</figcaption>
+          </figure>
+          <div class="controls">
+            <label class="control"><span class="label">Velocidade inicial: <span data-role="v0-value"></span></span>
+              <input type="range" data-role="v0">
+            </label>
+            <fieldset>
+              <legend>Dados usados</legend>
+              <label><input type="radio" name="inv-band" value="low"> só 4 Hz</label>
+              <label><input type="radio" name="inv-band" value="high" checked> só 12 Hz</label>
+              <label><input type="radio" name="inv-band" value="multi"> 4 Hz, depois 12 Hz</label>
+            </fieldset>
+            <fieldset>
+              <legend>Fontes e receptores</legend>
+              <label><input type="radio" name="inv-geometry" value="crosswell" checked> esquerda e direita</label>
+              <label><input type="radio" name="inv-geometry" value="surround"> os quatro lados</label>
+            </fieldset>
+            <div class="button-row">
+              <button type="button" class="primary" data-role="run" aria-pressed="false">Executar</button>
+              <button type="button" data-role="step">Uma iteração</button>
+              <button type="button" data-role="reset">Reiniciar</button>
+            </div>
+          </div>
+          <p class="demo-status"><span data-role="progress"></span> · <span data-role="status" aria-live="polite"></span></p>
+        </section>
+
+        <h3>O que observar</h3>
+        <ul>
+          <li><strong>Bom início:</strong> o fundo já está correto, o misfit cai de forma constante e o corpo rápido aparece no lugar certo. Ele sai borrado na horizontal: com fontes de um lado e receptores do outro, a maioria das ondas o atravessa da esquerda para a direita, o que restringe mal a sua largura.</li>
+          <li><strong>Com cycle-skipping:</strong> partindo de um modelo 15% lento demais, o misfit a 12 Hz trava bem acima de zero. A estimativa se enche de listras e as velocidades batem nos limites permitidos. A inversão está ajustando as oscilações erradas.</li>
+          <li><strong>Solução 1, de baixa para alta frequência:</strong> a partir do mesmo início ruim, a etapa de 4 Hz primeiro corrige o fundo suave, o que traz as chegadas para dentro de meio período de 12 Hz. Depois a etapa de 12 Hz deixa o corpo rápido nítido. Ir de frequências baixas para altas é um remédio clássico contra o cycle-skipping <a class="cite" href="#bunks1995" data-cite="bunks1995">(Bunks et al., 1995)</a>.</li>
+          <li><strong>Solução 2, fontes e receptores em todos os lados:</strong> ainda partindo de um modelo 15% lento e usando só dados de 12 Hz. As distâncias curtas entre fonte e receptor acrescentadas no topo e na base têm erros de chegada abaixo de meio período, então puxam primeiro o fundo para o valor certo, e os caminhos mais longos vêm em seguida. Nesta demonstração, um início rápido <em>demais</em> (2500 m/s) ainda sofre cycle-skipping com essa geometria.</li>
+        </ul>
+        <p class="note">Simplificações: os dados observados vêm do mesmo simulador e da mesma malha usados na inversão, sem ruído. Dados reais são mais ruidosos e nunca seguem a física exatamente, o que torna cada um desses problemas mais difícil.</p>
+
+        <p>O FWI iterativo resolve um novo problema de otimização para cada levantamento e depende de um bom modelo inicial. A próxima seção trata de métodos que, em vez disso, <a href="#deep-learning">aprendem o mapeamento dos dados para o modelo</a>.</p>
+      </div>
+    </details>
+    <details class="section" id="deep-learning">
+      <summary><h2 class="section-title">Entra o deep learning</h2><span class="section-sub">Inversão aprendida</span></summary>
+      <div class="section-body">
+        <p class="lede">O FWI iterativo resolve um novo problema de otimização para cada levantamento e precisa de um bom modelo inicial para evitar o cycle-skipping. A inversão aprendida segue outro caminho: treina-se uma rede neural uma única vez, com muitos pares de dados sísmicos e modelos de velocidade. Depois disso, inverter dados novos exige uma única passada pela rede.</p>
+
+        <h3>Da otimização a um mapeamento aprendido</h3>
+        <p>O FWI clássico procura o modelo que explica um conjunto de dados:</p>
+        \[ \mathbf{m}^\star = \arg\min_{\mathbf{m}} J(\mathbf{m}; \mathbf{d}_{\text{obs}}). \]
+        <p>Uma abordagem aprendida, em vez disso, ajusta os parâmetros \(\theta\) de uma rede \(f_\theta\) que leva dados a modelos, usando um conjunto de treino de exemplos simulados \((\mathbf{d}_i, \mathbf{m}_i)\):</p>
+        \[ \theta^\star = \arg\min_{\theta} \sum_i \big\lVert f_{\theta}(\mathbf{d}_i) - \mathbf{m}_i \big\rVert_1, \qquad \hat{\mathbf{m}} = f_{\theta^\star}(\mathbf{d}_{\text{obs}}). \]
+        <p>A parte cara sai do momento da inferência e vai para o treino, e a física entra apenas pelos exemplos. Esse compromisso define tudo o que vem a seguir.</p>
+
+        <h3>Um pequeno experimento</h3>
+        <p>Para tornar a comparação concreta, uma rede foi treinada especificamente para este site. Cinco fontes e 64 receptores na superfície registram um modelo de 640 m × 640 m a <span data-fill="f0_hz"></span> Hz. Os <span data-fill="train_size" data-format="thousands"></span> modelos de treino vêm de um gerador aleatório de camadas curvas, falhas e intrusões. A rede é um pequeno codificador–decodificador convolucional. Simular os dados de treino levou cerca de 10 minutos e o treino cerca de 13 minutos, ambos numa GPU de notebook. A referência clássica é o FWI rodando sobre o mesmo simulador. Ele parte de um modelo 1D suave (o perfil médio em profundidade dos modelos de treino) e vai de frequências baixas para altas.</p>
+
+        <section class="demo wide" id="dl-comparison" aria-labelledby="dl-title">
+          <h4 id="dl-title">Compare: FWI clássico e deep learning</h4>
+          <div class="scenario-row" role="group" aria-label="Caso de teste">
+            <button type="button" data-case="in-distribution" aria-pressed="true">Modelo de teste parecido com o treino</button>
+            <button type="button" data-case="out-of-distribution" aria-pressed="false">Geologia desconhecida</button>
+          </div>
+          <div class="dl-layout">
+            <figure class="dl-slider">
+              <div class="dl-stage">
+                <img data-role="right-img" alt="" width="256" height="256">
+                <img data-role="left-img" alt="" width="256" height="256" class="dl-overlay">
+                <div class="dl-divider" data-role="divider" aria-hidden="true"></div>
+                <span class="dl-tag dl-tag-left" data-role="left-tag"></span>
+                <span class="dl-tag dl-tag-right" data-role="right-tag"></span>
+              </div>
+              <label class="control"><span class="label">Arraste para comparar</span>
+                <input type="range" data-role="position" min="0" max="100" value="50">
+              </label>
+            </figure>
+            <figure class="dl-truth">
+              <img data-role="truth-img" alt="Modelo de velocidade real" width="256" height="256">
+              <figcaption>Modelo real</figcaption>
+              <div class="axis-label" aria-hidden="true"><span>1500 m/s</span><span>4500 m/s</span></div>
+              <div class="legend-bar" aria-hidden="true"></div>
+            </figure>
+          </div>
+          <div class="controls">
+            <label class="control"><span class="label">Imagem da esquerda</span>
+              <select data-role="left">
+                <option value="fwi" selected>FWI clássico</option>
+                <option value="start">Modelo inicial</option>
+                <option value="dl">Deep learning</option>
+                <option value="true">Modelo real</option>
+              </select>
+            </label>
+            <label class="control"><span class="label">Imagem da direita</span>
+              <select data-role="right">
+                <option value="dl" selected>Deep learning</option>
+                <option value="fwi">FWI clássico</option>
+                <option value="true">Modelo real</option>
+                <option value="start">Modelo inicial</option>
+              </select>
+            </label>
+          </div>
+          <table class="metrics">
+            <caption>Erro absoluto médio de velocidade em relação ao modelo real e tempo de cálculo numa GPU de notebook (RTX 3050).</caption>
+            <thead><tr><th scope="col">Método</th><th scope="col">Erro</th><th scope="col">Tempo</th></tr></thead>
+            <tbody data-role="metrics"></tbody>
+          </table>
+          <p class="demo-status" data-role="status"></p>
+        </section>
+
+        <h3>O que a comparação mostra</h3>
+        <ul>
+          <li><strong>Velocidade.</strong> Depois de treinada, a rede inverte um conjunto de dados em cerca de <span data-fill="cases.in-distribution.seconds.dl" data-format="ms"></span>. O FWI clássico leva cerca de <span data-fill="cases.in-distribution.seconds.fwi" data-format="minutes"></span> na mesma GPU. O custo mudou de lugar, não desapareceu: o conjunto de treino e o treino teriam de ser refeitos para outra geometria de aquisição ou outra banda de frequência.</li>
+          <li><strong>Geologia familiar.</strong> Em modelos parecidos com os de treino, a rede é precisa: seu erro médio em <span data-fill="test_size"></span> modelos de teste não vistos é de <span data-fill="dl_test_set_mae_mps" data-format="mps"></span>. No exemplo mostrado, os dois métodos ficam próximos (<span data-fill="cases.in-distribution.mae_mps.fwi" data-format="mps"></span> para o FWI, <span data-fill="cases.in-distribution.mae_mps.dl" data-format="mps"></span> para a rede). O modelo da rede é mais suave e deixa escapar o pequeno corpo perto do canto inferior direito.</li>
+          <li><strong>Geologia desconhecida.</strong> O segundo modelo tem camadas íngremes e curvas e uma lente lenta, características que o gerador nunca produz. O FWI ainda recupera a lente e a forma das camadas (<span data-fill="cases.out-of-distribution.mae_mps.fwi" data-format="mps"></span>), porque ajusta este conjunto de dados específico através da física. A rede devolve um modelo em camadas de aparência plausível, sem lente nenhuma (<span data-fill="cases.out-of-distribution.mae_mps.dl" data-format="mps"></span>). Ela só consegue reproduzir os tipos de estrutura com que foi treinada.</li>
+        </ul>
+        <p class="note">Este é um único experimento pequeno, com dados sintéticos e sem ruído. Ele ilustra o compromisso; não classifica métodos. O exemplo de teste foi escolhido por uma regra fixa (o modelo de teste com maior variação de velocidade), não pelo desempenho de nenhum dos métodos nele. Código: <code>scripts/dl/</code> no repositório.</p>
+
+        <h3>Famílias de técnicas na literatura</h3>
+        <p>O restante da área, em geral, mantém o simulador da equação da onda e insere uma rede em um de três pontos do ciclo de inversão. As famílias abaixo seguem a bibliografia do autor (veja o <a href="#research-landscape">panorama da pesquisa</a>). Os artigos são agrupados pelo lugar onde a rede atua e pelo que dizem seus títulos; nada aqui resume os resultados deles.</p>
+        <h4>Redes que geram o modelo</h4>
+        <p>Em vez de atualizar diretamente a velocidade de cada célula, uma rede neural produz o modelo de velocidade, e os pesos da rede são otimizados através do simulador da equação da onda. Este é o maior grupo do levantamento <span class="cite-list" data-cite-list="group=survey insertion=model">(<a class="cite-item" href="#zhu2022integrating" data-cite="zhu2022integrating">Zhu et al., 2022</a>; <a class="cite-item" href="#sun2023implicit" data-cite="sun2023implicit">Sun et al., 2023</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#wu2025selfsup" data-cite="wu2025selfsup">Wu et al., 2025</a>; <a class="cite-item" href="#wu2026fourier" data-cite="wu2026fourier">Kang et al., 2026</a>; <a class="cite-item" href="#huo2026cnnmmi" data-cite="huo2026cnnmmi">Li et al., 2026c</a>; <a class="cite-item" href="#liu2026reparam" data-cite="liu2026reparam">Liu et al., 2026</a>; <a class="cite-item" href="#qu2026axpcae" data-cite="qu2026axpcae">Niu et al., 2026a</a>; <a class="cite-item" href="#qu2026piedd" data-cite="qu2026piedd">Niu et al., 2026b</a>; <a class="cite-item" href="#han2026kan" data-cite="han2026kan">Wu et al., 2026</a>)</span>. Na bibliografia, os títulos mencionam redes convolucionais <span class="cite-list" data-cite-list="tag=CNN">(<a class="cite-item" href="#shao2026scfwi" data-cite="shao2026scfwi">Huo et al., 2026</a>; <a class="cite-item" href="#han2026kan" data-cite="han2026kan">Wu et al., 2026</a>)</span>, perceptrons multicamadas e representações neurais implícitas <span class="cite-list" data-cite-list="tag=MLP,neural+representation">(<a class="cite-item" href="#sun2023implicit" data-cite="sun2023implicit">Sun et al., 2023</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#wu2026fourier" data-cite="wu2026fourier">Kang et al., 2026</a>; <a class="cite-item" href="#wang2026metaifwi" data-cite="wang2026metaifwi">Wang et al., 2026</a>)</span>, arquiteturas informadas ou restritas pela física <span class="cite-list" data-cite-list="tag=physics-informed">(<a class="cite-item" href="#huang2025fnofwi" data-cite="huang2025fnofwi">Huang et al., 2025</a>; <a class="cite-item" href="#elmeliegy2026vae" data-cite="elmeliegy2026vae">Elmeliegy et al., 2026</a>; <a class="cite-item" href="#qu2026axpcae" data-cite="qu2026axpcae">Niu et al., 2026a</a>; <a class="cite-item" href="#qu2026piedd" data-cite="qu2026piedd">Niu et al., 2026b</a>)</span> e treino autossupervisionado <span class="cite-list" data-cite-list="tag=self-supervised">(<a class="cite-item" href="#wu2025selfsup" data-cite="wu2025selfsup">Wu et al., 2025</a>; <a class="cite-item" href="#huo2026cnnmmi" data-cite="huo2026cnnmmi">Li et al., 2026c</a>)</span>.</p>
+        <h4>Funções de misfit redesenhadas e aprendidas</h4>
+        <p>Aqui a mudança está em como os sismogramas observados e simulados são comparados. É o misfit de mínimos quadrados, amostra por amostra, que torna o cycle-skipping possível; trocá-lo por outra distância, ou por uma comparação aprendida por uma rede, é uma forma direta de atacar o problema <span class="cite-list" data-cite-list="tag=misfit+function">(<a class="cite-item" href="#metivier2016" data-cite="metivier2016">Métivier et al., 2016</a>; <a class="cite-item" href="#sun2022mlmisfit" data-cite="sun2022mlmisfit">Sun &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#alfarhan2026timeshift" data-cite="alfarhan2026timeshift">Alfarhan et al., 2026</a>; <a class="cite-item" href="#shao2026scfwi" data-cite="shao2026scfwi">Huo et al., 2026</a>; <a class="cite-item" href="#saad2026siamesefit" data-cite="saad2026siamesefit">Saad &amp; Alkhalifah, 2026</a>)</span>.</p>
+        <h4>Priors aprendidos e regularização</h4>
+        <p>Uma rede treinada com modelos de velocidade plausíveis atua como regularizador ou prior, puxando a solução para estruturas realistas <span class="cite-list" data-cite-list="tag=learned+prior">(<a class="cite-item" href="#li2021targetoriented" data-cite="li2021targetoriented">Li et al., 2021</a>; <a class="cite-item" href="#li2022targetlapse" data-cite="li2022targetlapse">Li &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#taufik2024learned" data-cite="taufik2024learned">Taufik et al., 2024</a>; <a class="cite-item" href="#du2025wgan" data-cite="du2025wgan">Du &amp; Wang, 2025</a>; <a class="cite-item" href="#taufik2025wavenumber" data-cite="taufik2025wavenumber">Taufik &amp; Alkhalifah, 2025</a>; <a class="cite-item" href="#elmeliegy2026vae" data-cite="elmeliegy2026vae">Elmeliegy et al., 2026</a>; <a class="cite-item" href="#li2026co2" data-cite="li2026co2">Li et al., 2026a</a>; <a class="cite-item" href="#siahkoohi2026memorization" data-cite="siahkoohi2026memorization">Siahkoohi &amp; Sabeddu, 2026</a>)</span>. Vários trabalhos recentes usam modelos de difusão para isso <span class="cite-list" data-cite-list="id=taufik2024learned,taufik2025wavenumber">(<a class="cite-item" href="#taufik2024learned" data-cite="taufik2024learned">Taufik et al., 2024</a>; <a class="cite-item" href="#taufik2025wavenumber" data-cite="taufik2025wavenumber">Taufik &amp; Alkhalifah, 2025</a>)</span>.</p>
+        <h4>Quantificação de incerteza</h4>
+        <p>Em vez de um único modelo de melhor ajuste, estes métodos estimam uma distribuição de modelos plausíveis, por exemplo com redes neurais bayesianas ou inferência variacional <span class="cite-list" data-cite-list="tag=uncertainty">(<a class="cite-item" href="#zhu2022integrating" data-cite="zhu2022integrating">Zhu et al., 2022</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#yin2025wiser" data-cite="yin2025wiser">Yin et al., 2025</a>; <a class="cite-item" href="#elmeliegy2026vae" data-cite="elmeliegy2026vae">Elmeliegy et al., 2026</a>; <a class="cite-item" href="#li2026co2" data-cite="li2026co2">Li et al., 2026a</a>; <a class="cite-item" href="#um2026joint3d" data-cite="um2026joint3d">Um et al., 2026</a>)</span>.</p>
+        <h4>Inversão multiparâmetro</h4>
+        <p>O FWI elástico estima várias propriedades ao mesmo tempo, como as velocidades das ondas P e S e a densidade. Os parâmetros estão acoplados nos dados, então um erro em um pode vazar para outro, um problema conhecido como crosstalk (veja os <a href="#open-problems">problemas em aberto</a>). Trabalhos de deep learning no caso multiparâmetro: <span class="cite-list" data-cite-list="tag=multiparameter group=survey | tag=multiparameter group=ml-native">(<a class="cite-item" href="#li2022targetlapse" data-cite="li2022targetlapse">Li &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#feng2023efwi" data-cite="feng2023efwi">Feng et al., 2023</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#taufik2024learned" data-cite="taufik2024learned">Taufik et al., 2024</a>; <a class="cite-item" href="#du2025wgan" data-cite="du2025wgan">Du &amp; Wang, 2025</a>; <a class="cite-item" href="#taufik2025wavenumber" data-cite="taufik2025wavenumber">Taufik &amp; Alkhalifah, 2025</a>; <a class="cite-item" href="#wu2025selfsup" data-cite="wu2025selfsup">Wu et al., 2025</a>; <a class="cite-item" href="#huo2026cnnmmi" data-cite="huo2026cnnmmi">Li et al., 2026c</a>; <a class="cite-item" href="#qu2026piedd" data-cite="qu2026piedd">Niu et al., 2026b</a>; <a class="cite-item" href="#han2026kan" data-cite="han2026kan">Wu et al., 2026</a>)</span>.</p>
+        <h4>Benchmarks</h4>
+        <p>Conjuntos de dados sintéticos compartilhados tornam os métodos aprendidos comparáveis, e também definem a geologia em que esses métodos são treinados e testados <span class="cite-list" data-cite-list="tag=benchmark">(<a class="cite-item" href="#deng2022openfwi" data-cite="deng2022openfwi">Deng et al., 2022</a>; <a class="cite-item" href="#feng2023efwi" data-cite="feng2023efwi">Feng et al., 2023</a>; <a class="cite-item" href="#geofwi2026" data-cite="geofwi2026">Li et al., 2026b</a>; <a class="cite-item" href="#liu2026reparam" data-cite="liu2026reparam">Liu et al., 2026</a>)</span>.</p>
+
+        <p>Para onde a área caminha? A seção de <a href="#open-problems">problemas em aberto</a> reúne as lacunas que esses métodos ainda deixam.</p>
+      </div>
+    </details>
+    <details class="section" id="research-landscape">
+      <summary><h2 class="section-title">Panorama da pesquisa</h2><span class="section-sub">Mapeando a área</span></summary>
+      <div class="section-body">
+        <p class="lede">Todos os artigos da bibliografia de trabalho do autor numa única linha do tempo, filtrável por tema.</p>
+        <p>O mapa reúne três conjuntos de referências. O primeiro é o FWI clássico. O segundo é um levantamento preliminar, não sistemático, de 16 artigos de FWI com deep learning publicados entre 2021 e 2026, agrupados pelo ponto em que a rede entra na inversão: gerando o modelo, comparando os dados ou atuando como prior. O terceiro reúne trabalhos orientados a machine learning sobre o problema, como misfits aprendidos, priors de difusão, operadores neurais e conjuntos de dados de benchmark. Os temas de cada artigo são derivados do título por regras fixas de palavras-chave. Selecione um ponto ou um item da lista para ver detalhes; os links levam à editora ou ao arXiv.</p>
+        <section class="demo wide" id="landscape" aria-labelledby="ls-title">
+          <h4 id="ls-title">Explore a bibliografia</h4>
+          <div class="tag-filter" role="group" aria-label="Filtrar por tema" data-role="filters"></div>
+          <p class="demo-status" data-role="count" aria-live="polite"></p>
+          <div data-role="chart"></div>
+          <ul class="chart-legend" data-role="legend"></ul>
+          <div class="paper-detail" data-role="detail" aria-live="polite"><p>Selecione um artigo para ver os detalhes.</p></div>
+          <h5 class="paper-list-title">Artigos exibidos</h5>
+          <ul class="paper-list" data-role="list"></ul>
+        </section>
+      </div>
+    </details>
+    <details class="section" id="open-problems">
+      <summary><h2 class="section-title">Problemas em aberto</h2><span class="section-sub">Para onde a área caminha</span></summary>
+      <div class="section-body">
+        <p class="lede">As dificuldades das seções anteriores são também onde a pesquisa atual se concentra. Cada cartão lista os trabalhos da bibliografia cujos títulos tratam do tema.</p>
+        <div class="problem-cards">
+          <article class="problem-card">
+            <h3>Cycle-skipping e o modelo inicial</h3>
+            <p>Misfits de forma de onda por mínimos quadrados têm mínimos locais sempre que as chegadas previstas erram por mais de meio período; por isso o FWI depende de um bom modelo inicial e de frequências baixas <a class="cite" href="#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>. As <a href="#inverse-problem">demonstrações do problema inverso</a> mostram os dois efeitos. Ir de frequências baixas para altas é o remédio clássico <a class="cite" href="#bunks1995" data-cite="bunks1995">(Bunks et al., 1995)</a>. Outras abordagens mudam o próprio misfit.</p>
+            <p class="card-refs">Na bibliografia: <span class="cite-list" data-cite-list="tag=cycle-skipping | tag=misfit+function">(<a class="cite-item" href="#metivier2016" data-cite="metivier2016">Métivier et al., 2016</a>; <a class="cite-item" href="#engquist2022" data-cite="engquist2022">Engquist &amp; Yang, 2022</a>; <a class="cite-item" href="#sun2022mlmisfit" data-cite="sun2022mlmisfit">Sun &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#alfarhan2026timeshift" data-cite="alfarhan2026timeshift">Alfarhan et al., 2026</a>; <a class="cite-item" href="#shao2026scfwi" data-cite="shao2026scfwi">Huo et al., 2026</a>; <a class="cite-item" href="#saad2026siamesefit" data-cite="saad2026siamesefit">Saad &amp; Alkhalifah, 2026</a>)</span></p>
+          </article>
+          <article class="problem-card">
+            <h3>Crosstalk entre parâmetros</h3>
+            <p>Quando várias propriedades são invertidas juntas, seus efeitos nos dados se sobrepõem, e o erro de um parâmetro pode ser absorvido por outro <a class="cite" href="#operto2013" data-cite="operto2013">(Operto et al., 2013)</a>. Ele pode até vazar entre incógnitas em posições diferentes <a class="cite" href="#keating2020" data-cite="keating2020">(Keating &amp; Innanen, 2020)</a>.</p>
+            <p class="card-refs">Trabalhos de deep learning em inversão multiparâmetro: <span class="cite-list" data-cite-list="tag=multiparameter group=survey | tag=multiparameter group=ml-native">(<a class="cite-item" href="#li2022targetlapse" data-cite="li2022targetlapse">Li &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#feng2023efwi" data-cite="feng2023efwi">Feng et al., 2023</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#taufik2024learned" data-cite="taufik2024learned">Taufik et al., 2024</a>; <a class="cite-item" href="#du2025wgan" data-cite="du2025wgan">Du &amp; Wang, 2025</a>; <a class="cite-item" href="#taufik2025wavenumber" data-cite="taufik2025wavenumber">Taufik &amp; Alkhalifah, 2025</a>; <a class="cite-item" href="#wu2025selfsup" data-cite="wu2025selfsup">Wu et al., 2025</a>; <a class="cite-item" href="#huo2026cnnmmi" data-cite="huo2026cnnmmi">Li et al., 2026c</a>; <a class="cite-item" href="#qu2026piedd" data-cite="qu2026piedd">Niu et al., 2026b</a>; <a class="cite-item" href="#han2026kan" data-cite="han2026kan">Wu et al., 2026</a>)</span></p>
+          </article>
+          <article class="problem-card">
+            <h3>Generalização para geologia desconhecida</h3>
+            <p>Uma rede só consegue reproduzir os tipos de estrutura com que foi treinada, como mostra o <a href="#deep-learning">experimento de deep learning</a> desta página com uma lente lenta que a rede nunca viu. Por isso, os conjuntos de dados sintéticos usados para treino e teste determinam o que um método aprendido consegue recuperar.</p>
+            <p class="card-refs">Benchmarks na bibliografia: <span class="cite-list" data-cite-list="tag=benchmark">(<a class="cite-item" href="#deng2022openfwi" data-cite="deng2022openfwi">Deng et al., 2022</a>; <a class="cite-item" href="#feng2023efwi" data-cite="feng2023efwi">Feng et al., 2023</a>; <a class="cite-item" href="#geofwi2026" data-cite="geofwi2026">Li et al., 2026b</a>; <a class="cite-item" href="#liu2026reparam" data-cite="liu2026reparam">Liu et al., 2026</a>)</span></p>
+          </article>
+          <article class="problem-card">
+            <h3>Incerteza</h3>
+            <p>Um único modelo de melhor ajuste esconde quão bem cada região está restrita. As <a href="#inverse-problem">demonstrações de inversão</a> mostram que algumas partes do modelo mal são iluminadas. Estimar em vez disso uma distribuição de modelos plausíveis, e verificar se sua dispersão é confiável, é uma direção ativa de pesquisa.</p>
+            <p class="card-refs">Na bibliografia: <span class="cite-list" data-cite-list="tag=uncertainty">(<a class="cite-item" href="#zhu2022integrating" data-cite="zhu2022integrating">Zhu et al., 2022</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#yin2025wiser" data-cite="yin2025wiser">Yin et al., 2025</a>; <a class="cite-item" href="#elmeliegy2026vae" data-cite="elmeliegy2026vae">Elmeliegy et al., 2026</a>; <a class="cite-item" href="#li2026co2" data-cite="li2026co2">Li et al., 2026a</a>; <a class="cite-item" href="#um2026joint3d" data-cite="um2026joint3d">Um et al., 2026</a>)</span></p>
+          </article>
+          <article class="problem-card">
+            <h3>Monitoramento time-lapse (4D)</h3>
+            <p>Levantamentos repetidos sobre a mesma área buscam imagear mudanças, por exemplo num reservatório ou num local de armazenamento de CO₂. As mudanças de interesse costumam ser pequenas perto do próprio modelo, o que as torna fáceis de confundir com erros da inversão.</p>
+            <p class="card-refs">Na bibliografia: <span class="cite-list" data-cite-list="tag=time-lapse">(<a class="cite-item" href="#li2021targetoriented" data-cite="li2021targetoriented">Li et al., 2021</a>; <a class="cite-item" href="#li2022targetlapse" data-cite="li2022targetlapse">Li &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#li2026co2" data-cite="li2026co2">Li et al., 2026a</a>)</span></p>
+          </article>
+        </div>
+      </div>
+    </details>
+    <details class="section" id="references">
+      <summary><h2 class="section-title">Referências</h2><span class="section-sub">Todas as fontes citadas nesta página</span></summary>
+      <div class="section-body">
+        <p class="lede">Todas as fontes citadas nesta página, geradas automaticamente a partir das citações do texto. Os títulos aparecem no idioma original.</p>
+        <!-- references:start (generated by scripts/build-page.js; do not edit) -->
+        <ol class="bibliography">
+          <li id="alfarhan2026timeshift">
+            Alfarhan, M., Chen, F., Turkiyyah, G., Keyes, D., Vasconcelos, I., Ravasi, M. (2026). A deep learning-based time shift objective function for full waveform inversion. <em>Geophysical Prospecting</em> 74(3), e70160. <a href="https://doi.org/10.1111/1365-2478.70160">doi:10.1111/1365-2478.70160</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="bunks1995">
+            Bunks, C., Saleck, F. M., Zaleski, S., Chavent, G. (1995). Multiscale seismic waveform inversion. <em>Geophysics</em> 60(5), 1457–1473. <a href="https://doi.org/10.1190/1.1443880">doi:10.1190/1.1443880</a>
+            <span class="cited-on">Citado em: <a href="#inverse-problem">O problema inverso</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="cerjan1985">
+            Cerjan, C., Kosloff, D., Kosloff, R., Reshef, M. (1985). A nonreflecting boundary condition for discrete acoustic and elastic wave equations. <em>Geophysics</em> 50(4), 705–708. <a href="https://doi.org/10.1190/1.1441945">doi:10.1190/1.1441945</a>
+            <span class="cited-on">Citado em: <a href="#forward-modeling">Modelagem direta</a></span>
+          </li>
+          <li id="deng2022openfwi">
+            Deng, C., Feng, S., Wang, H., Zhang, X., Jin, P., Feng, Y., Zeng, Q., Chen, Y., Lin, Y. (2022). OpenFWI: Large-scale multi-structural benchmark datasets for full waveform inversion. <em>Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track</em> 35, 6007–6020. <a href="https://doi.org/10.52202/068431-0435">doi:10.52202/068431-0435</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="du2025wgan">
+            Du, J., Wang, W. (2025). WGAN-regularized elastic full waveform inversion for petrophysical properties. <em>IEEE Transactions on Geoscience and Remote Sensing</em> 63, 1–14. <a href="https://doi.org/10.1109/TGRS.2025.3605583">doi:10.1109/TGRS.2025.3605583</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="elmeliegy2026vae">
+            Elmeliegy, A., Sen, M. K., Dhara, A., Harding, J., Yoon, H. (2026). Physics-constrained variational autoencoder for uncertainty quantification of full waveform inversion. <em>Journal of Geophysical Research: Machine Learning and Computation</em> 3(5), e2026JH001389. <a href="https://doi.org/10.1029/2026JH001389">doi:10.1029/2026JH001389</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="engquist2022">
+            Engquist, B., Yang, Y. (2022). Optimal transport based seismic inversion: Beyond cycle skipping. <em>Communications on Pure and Applied Mathematics</em> 75(10), 2201–2244. <a href="https://doi.org/10.1002/cpa.21990">doi:10.1002/cpa.21990</a>
+            <span class="cited-on">Citado em: <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="feng2023efwi">
+            Feng, S., Wang, H., Deng, C., Feng, Y., Liu, Y., Zhu, M., Jin, P., Chen, Y., Lin, Y. (2023). 𝔼^FWI: Multiparameter benchmark datasets for elastic full waveform inversion of geophysical properties. <em>Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track</em> 36, 23701–23713. <a href="https://doi.org/10.52202/075280-1029">doi:10.52202/075280-1029</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="huang2025fnofwi">
+            Huang, X., Wang, F., Alkhalifah, T. (2025). Physics-informed waveform inversion using pretrained wavefield neural operators. <em>IEEE Transactions on Geoscience and Remote Sensing</em>. <a href="https://doi.org/10.1109/TGRS.2025.3624025">doi:10.1109/TGRS.2025.3624025</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a></span>
+          </li>
+          <li id="shao2026scfwi">
+            Huo, K., Shao, G., Hu, J., Chang, W., Wang, P. (2026). Feature-data collaborative inversion: A Siamese convolutional neural network method for shallow-subsurface EFWI. <em>Artificial Intelligence in Geosciences</em> 7(3), 100250. <a href="https://doi.org/10.1016/j.aiig.2026.100250">doi:10.1016/j.aiig.2026.100250</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="wu2026fourier">
+            Kang, B., Chen, R., Yang, K., Li, M., Wu, B. (2026). Implicit full waveform inversion with adaptive Fourier frequency bases learning. <em>Geophysical Journal International</em> 244(1), ggaf404. <a href="https://doi.org/10.1093/gji/ggaf404">doi:10.1093/gji/ggaf404</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a></span>
+          </li>
+          <li id="keating2020">
+            Keating, S., Innanen, K. A. (2020). Parameter crosstalk and leakage between spatially separated unknowns in viscoelastic full-waveform inversion. <em>Geophysics</em> 85(4), R397–R408. <a href="https://doi.org/10.1190/GEO2019-0370.1">doi:10.1190/GEO2019-0370.1</a>
+            <span class="cited-on">Citado em: <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="geofwi2026">
+            Li, C., Shen, Y., Fomel, S., Waheed, U. B., Savvaidis, A., Chen, Y. (2026b). GeoFWI: A large velocity model data set for benchmarking full waveform inversion using deep learning. <em>Journal of Geophysical Research: Machine Learning and Computation</em> 3(2), e2025JH001037. <a href="https://doi.org/10.1029/2025JH001037">doi:10.1029/2025JH001037</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="li2026co2">
+            Li, H., Wang, N., Durlofsky, L. J., Biondi, B. L. (2026a). Bayesian full-waveform monitoring of CO₂ storage with fluid-flow priors via generative modeling. <em>Journal of Geophysical Research: Machine Learning and Computation</em> 3(3), e2025JH001190. <a href="https://doi.org/10.1029/2025JH001190">doi:10.1029/2025JH001190</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="huo2026cnnmmi">
+            Li, W., Zhuo, X., Huo, S. (2026c). Progressive self-supervised inversion with multiscale strategies for resolving multiparameter crosstalk in a marine data case. <em>IEEE Transactions on Geoscience and Remote Sensing</em> 64, 5908515. <a href="https://doi.org/10.1109/TGRS.2026.3682202">doi:10.1109/TGRS.2026.3682202</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="li2021targetoriented">
+            Li, Y., Alkhalifah, T., Guo, Q. (2021). Target-oriented time-lapse waveform inversion using deep learning-assisted regularization. <em>Geophysics</em> 86(4), R485–R495. <a href="https://doi.org/10.1190/geo2020-0383.1">doi:10.1190/geo2020-0383.1</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="li2022targetlapse">
+            Li, Y., Alkhalifah, T. (2022). Target-oriented time-lapse elastic full-waveform inversion constrained by deep learning-based prior model. <em>IEEE Transactions on Geoscience and Remote Sensing</em> 60, 1–12. <a href="https://doi.org/10.1109/TGRS.2022.3186028">doi:10.1109/TGRS.2022.3186028</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="liu2026reparam">
+            Liu, F., Li, Y.-X., Su, R., Huang, J.-P., Bai, L. (2026). Deep reparameterization for full waveform inversion: Architecture benchmarking, robust inversion, and multiphysics extension. <em>Petroleum Science</em> 23(4), 1890–1907. <a href="https://doi.org/10.1016/j.petsci.2025.12.027">doi:10.1016/j.petsci.2025.12.027</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="metivier2016">
+            Métivier, L., Brossier, R., Mérigot, Q., Oudet, E., Virieux, J. (2016). Measuring the misfit between seismograms using an optimal transport distance: application to full waveform inversion. <em>Geophysical Journal International</em> 205(1), 345–377. <a href="https://doi.org/10.1093/gji/ggw014">doi:10.1093/gji/ggw014</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="qu2026axpcae">
+            Niu, Y., Qu, Y., Li, Z. (2026a). A physics-constrained autoencoder for full-waveform inversion using axial self-attention. <em>Journal of Seismic Exploration</em> 35(1), 269. <a href="https://doi.org/10.36922/jse025480119">doi:10.36922/jse025480119</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a></span>
+          </li>
+          <li id="qu2026piedd">
+            Niu, Y., Qu, Y., Li, Z. (2026b). Initial-model-free elastic full-waveform inversion using a physics-informed encoder–dual–decoder network. <em>Journal of Applied Geophysics</em> 251, 106272. <a href="https://doi.org/10.1016/j.jappgeo.2026.106272">doi:10.1016/j.jappgeo.2026.106272</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="operto2013">
+            Operto, S., Gholami, Y., Prieux, V., Ribodetti, A., Brossier, R., Métivier, L., Virieux, J. (2013). A guided tour of multiparameter full-waveform inversion with multicomponent data: From theory to practice. <em>The Leading Edge</em> 32(9), 1040–1054. <a href="https://doi.org/10.1190/tle32091040.1">doi:10.1190/tle32091040.1</a>
+            <span class="cited-on">Citado em: <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="plessix2006">
+            Plessix, R.-E. (2006). A review of the adjoint-state method for computing the gradient of a functional with geophysical applications. <em>Geophysical Journal International</em> 167(2), 495–503. <a href="https://doi.org/10.1111/j.1365-246X.2006.02978.x">doi:10.1111/j.1365-246X.2006.02978.x</a>
+            <span class="cited-on">Citado em: <a href="#inverse-problem">O problema inverso</a></span>
+          </li>
+          <li id="saad2026siamesefit">
+            Saad, O. M., Alkhalifah, T. (2026). SiameseFit: Latent seismic data comparison for enhanced full waveform inversion and cycle-skipping mitigation. <em>Geophysical Prospecting</em> 74, e70203. <a href="https://doi.org/10.1111/1365-2478.70203">doi:10.1111/1365-2478.70203</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="siahkoohi2026memorization">
+            Siahkoohi, A., Sabeddu, D. (2026). On the role of memorization in learned priors for geophysical inverse problems. <em>arXiv preprint arXiv:2603.19629</em>. <a href="https://arxiv.org/abs/2603.19629">link</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a></span>
+          </li>
+          <li id="sun2022mlmisfit">
+            Sun, B., Alkhalifah, T. (2022). ML-misfit: A neural network formulation of the misfit function for full-waveform inversion. <em>Frontiers in Earth Science</em> 10, 1011825. <a href="https://doi.org/10.3389/feart.2022.1011825">doi:10.3389/feart.2022.1011825</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="sun2023implicit">
+            Sun, J., Innanen, K., Zhang, T., Trad, D. (2023). Implicit seismic full waveform inversion with deep neural representation. <em>Journal of Geophysical Research: Solid Earth</em> 128(3). <a href="https://doi.org/10.1029/2022JB025964">doi:10.1029/2022JB025964</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a></span>
+          </li>
+          <li id="tarantola1984">
+            Tarantola, A. (1984). Inversion of seismic reflection data in the acoustic approximation. <em>Geophysics</em> 49(8), 1259–1266. <a href="https://doi.org/10.1190/1.1441754">doi:10.1190/1.1441754</a>
+            <span class="cited-on">Citado em: <a href="#inverse-problem">O problema inverso</a></span>
+          </li>
+          <li id="taufik2024learned">
+            Taufik, M. H., Wang, F., Alkhalifah, T. (2024). Learned regularizations for multi-parameter elastic full waveform inversion using diffusion models. <em>Journal of Geophysical Research: Machine Learning and Computation</em> 1(1), e2024JH000125. <a href="https://doi.org/10.1029/2024JH000125">doi:10.1029/2024JH000125</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="taufik2025wavenumber">
+            Taufik, M. H., Alkhalifah, T. (2025). Wavenumber-aware diffusion sampling to regularize multiparameter elastic full waveform inversion. <em>Geophysical Journal International</em> 240(2), 1215–1233. <a href="https://doi.org/10.1093/gji/ggae437">doi:10.1093/gji/ggae437</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="um2026joint3d">
+            Um, E. S., Alumbaugh, D., Wang, H., Lin, Y. (2026). 3D deep learning joint inversion of active seismic full waveform and passive seismic traveltime data for reservoir imaging and uncertainty quantification. <em>Geophysical Prospecting</em> 74(1), e70126. <a href="https://doi.org/10.1111/1365-2478.70126">doi:10.1111/1365-2478.70126</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="virieux2009">
+            Virieux, J., Operto, S. (2009). An overview of full-waveform inversion in exploration geophysics. <em>Geophysics</em> 74(6), WCC1–WCC26. <a href="https://doi.org/10.1190/1.3238367">doi:10.1190/1.3238367</a>
+            <span class="cited-on">Citado em: <a href="#inverse-problem">O problema inverso</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="wang2026metaifwi">
+            Wang, Z., Cheng, S., Mao, W., Ouyang, W., Tang, H. (2026). Meta-learning-enhanced implicit full waveform inversion. <em>arXiv preprint arXiv:2604.26938</em>. <a href="https://arxiv.org/abs/2604.26938">link</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a></span>
+          </li>
+          <li id="han2026kan">
+            Wu, F., Li, Y., Fu, Z., Han, B., Chen, Y. (2026). High-resolution elastic full-waveform inversion using dual-channel CNN and Kolmogorov–Arnold network. <em>Journal of Applied Geophysics</em> 246, 106095. <a href="https://doi.org/10.1016/j.jappgeo.2026.106095">doi:10.1016/j.jappgeo.2026.106095</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="wu2025selfsup">
+            Wu, Y., Wang, W., Wang, Y., McMechan, G. A. (2025). Deep learning-based self-supervised multiparameter inversion. <em>Geophysical Journal International</em> 243(2), ggaf332. <a href="https://doi.org/10.1093/gji/ggaf332">doi:10.1093/gji/ggaf332</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="yin2025wiser">
+            Yin, Z., Orozco, R., Herrmann, F. J. (2025). WISER: Multimodal variational inference for full-waveform inversion without dimensionality reduction. <em>Geophysics</em> 90(2), A1–A7. <a href="https://doi.org/10.1190/geo2024-0483.1">doi:10.1190/geo2024-0483.1</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="zhang2023eifwi">
+            Zhang, T., Sun, J., Trad, D., Innanen, K. (2023). Multilayer perceptron and Bayesian neural network-based elastic implicit full waveform inversion. <em>IEEE Transactions on Geoscience and Remote Sensing</em> 61, 1–16. <a href="https://doi.org/10.1109/TGRS.2023.3265657">doi:10.1109/TGRS.2023.3265657</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+          <li id="zhu2022integrating">
+            Zhu, W., Xu, K., Darve, E., Biondi, B., Beroza, G. C. (2022). Integrating deep neural networks with full-waveform inversion: Reparameterization, regularization, and uncertainty quantification. <em>Geophysics</em> 87(1), R93–R109. <a href="https://doi.org/10.1190/geo2020-0933.1">doi:10.1190/geo2020-0933.1</a>
+            <span class="cited-on">Citado em: <a href="#deep-learning">Entra o deep learning</a>, <a href="#open-problems">Problemas em aberto</a></span>
+          </li>
+        </ol>
+        <!-- references:end -->
+      </div>
+    </details>
+  </main>
+  <footer class="site-footer">
+    <p>Criado por Thiago Barbieri como parte da pesquisa de doutorado em IA em andamento na Universidade de São Paulo (USP). <a href="https://github.com/barbieriht">GitHub</a> · <a href="https://www.linkedin.com/in/barbieriht/">LinkedIn</a></p>
+  </footer>
+  <script src="assets/vendor/katex/katex.min.js" defer></script>
+  <script src="assets/vendor/katex/auto-render.min.js" defer></script>
+  <script src="assets/vendor/d3/d3.min.js" defer></script>
+  <script src="assets/js/math.js" defer></script>
+  <script src="assets/js/i18n.js" defer></script>
+  <script src="assets/js/sections.js" defer></script>
+  <script src="assets/js/solver.js" defer></script>
+  <script src="assets/js/inversion.js" defer></script>
+  <script src="assets/js/colormap.js" defer></script>
+  <script src="assets/js/charts.js" defer></script>
+  <script src="assets/js/forward-demo.js" defer></script>
+  <script src="assets/js/inverse-setup.js" defer></script>
+  <script src="assets/js/inverse-landscape.js" defer></script>
+  <script src="assets/js/inverse-demo.js" defer></script>
+  <script src="assets/data/dl-comparison.js" defer></script>
+  <script src="assets/js/dl-demo.js" defer></script>
+  <script src="assets/data/literature.js" defer></script>
+  <script src="assets/js/landscape.js" defer></script>
+</body>
+</html>
