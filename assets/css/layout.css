@@ -172,8 +172,6 @@ details.section > summary:focus-visible { outline: 2px solid var(--accent); outl
 .section-title { margin: 0; font-size: 1.25rem; line-height: 1.3; }
 .section-sub { color: var(--text-muted); font-size: 0.95rem; }
 .section-body { padding: 0 16px 24px; border-top: 1px solid var(--border); }
-.section-body > * { max-width: var(--measure); }
-.section-body > .wide { max-width: none; }
 .section-body .demo { background: var(--bg); }
 .section-body .lede { margin-top: 16px; }
 @media (prefers-reduced-motion: reduce) { details.section > summary::after { transition: none; } }
@@ -213,7 +211,6 @@ details.section > summary:focus-visible { outline: 2px solid var(--accent); outl
 .demo .paper-list-item.selected { font-weight: 600; }
 
 /* Open problems */
-.section-body > .problem-cards { max-width: none; }
 .problem-cards { display: grid; gap: 12px; grid-template-columns: 1fr; margin-top: 16px; }
 @media (min-width: 760px) { .problem-cards { grid-template-columns: 1fr 1fr; } }
 .problem-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 16px 12px; background: var(--bg); }
