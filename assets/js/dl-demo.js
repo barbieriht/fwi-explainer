@@ -19,7 +19,7 @@
     const t = window.FWI.i18n.t;
     const num = window.FWI.i18n.num;
     const IMG_DIR = 'assets/img/dl/';
-    const LABELS = { true: t('dl.true'), start: t('dl.start'), fwi: t('dl.fwi'), dl: t('dl.dl') };
+    const LABELS = { true: t('dl.true'), start: t('dl.start'), fwi: t('dl.fwi'), dl: t('dl.dl'), hybrid: t('dl.hybrid') };
 
     const el = {
       cases: root.querySelectorAll('[data-case]'),
@@ -67,6 +67,7 @@
         ['start', m.mae_mps.start, '—'],
         ['fwi', m.mae_mps.fwi, t('dl.fwiTime', { time: formatSeconds(m.seconds.fwi), n: m.fwi_iterations })],
         ['dl', m.mae_mps.dl, t('dl.dlTime', { time: formatSeconds(m.seconds.dl) })],
+        ['hybrid', m.mae_mps.hybrid, t('dl.hybridTime', { time: formatSeconds(m.seconds.hybrid), n: m.hybrid_iterations })],
       ];
       el.metrics.replaceChildren.apply(el.metrics, rows.map(function (r) {
         const tr = document.createElement('tr');
@@ -96,6 +97,8 @@
       mps: function (v) { return num(v) + ' m/s'; },
       ms: function (v) { return Math.max(1, Math.round(1000 * v)) + ' ms'; },
       minutes: function (v) { return t('dl.minutes', { n: num(v / 60, 1) }); },
+      wholeMinutes: function (v) { return t('dl.minutes', { n: num(v) }); },
+      seconds: function (v) { return num(v) + ' s'; },
       thousands: function (v) { return num(v); },
     };
 

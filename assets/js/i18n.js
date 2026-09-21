@@ -60,6 +60,8 @@
       'dl.missing': 'Comparison data not found. Run scripts/dl/compare.py.',
       'dl.fwiTime': '{time} ({n} iterations)',
       'dl.dlTime': '{time} (one forward pass)',
+      'dl.hybrid': 'DL + FWI',
+      'dl.hybridTime': '{time} (network + {n} FWI iterations)',
       'dl.minutes': '{n} minutes',
 
       'sn.studies': 'Studies',
@@ -123,6 +125,8 @@
       'dl.missing': 'Dados da comparação não encontrados. Execute scripts/dl/compare.py.',
       'dl.fwiTime': '{time} ({n} iterações)',
       'dl.dlTime': '{time} (uma única passada)',
+      'dl.hybrid': 'DL + FWI',
+      'dl.hybridTime': '{time} (rede + {n} iterações de FWI)',
       'dl.minutes': '{n} minutos',
 
       'sn.studies': 'Estudos',

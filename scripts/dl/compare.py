@@ -1,12 +1,13 @@
 """Build the classical-vs-deep-learning comparison shown in the deep-learning section of index.html.
 
 For each case (the held-out test model with the most velocity variation, and a
-hand-made model unlike anything in the training set) it runs:
+hand-made model unlike anything in the training set) it runs three methods:
   - classical FWI: gradient-based optimization of the velocity model through
     the differentiable simulator, from a smooth 1D starting model (the mean
     depth profile of the training models, independent of the case), with a
     low-to-high frequency schedule (low-pass filtered data first), and
-  - the trained network: a single forward pass on the same data.
+  - the trained network: a single forward pass on the same data, and
+  - the hybrid: a short FWI run that starts from the network's prediction.
 It also reports the network's mean error over the whole test set.
 It writes PNGs (site colormap) to assets/img/dl/ and metrics to
 assets/data/dl-comparison.json.
@@ -37,6 +38,8 @@ VELOCITY_STOPS = np.array([[243, 231, 196], [86, 152, 163], [37, 52, 94]], dtype
 IMAGE_PX = 256
 # (low-pass cutoff in Hz or None for the full band, Adam iterations)
 FWI_SCHEDULE = ((5.0, 60), (8.0, 60), (None, 60))
+# The hybrid starts close to the answer, so it skips the lowest band and runs fewer iterations.
+HYBRID_SCHEDULE = ((8.0, 30), (None, 30))
 FWI_LEARNING_RATE = 25.0  # m/s per Adam step
 TIMING_REPEATS = 20
 
@@ -44,6 +47,8 @@ TIMING_REPEATS = 20
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data", type=Path, required=True)
+    p.add_argument("--model", default="model.pt", help="checkpoint inside --data (its .json config sits next to it)")
+    p.add_argument("--eval-only", action="store_true", help="only report the test-set MAE of --model")
     return p.parse_args()
 
 
@@ -87,11 +92,12 @@ def lowpass(traces: torch.Tensor, cutoff_hz):
     return torch.fft.irfft(spectrum, n=n, dim=2)
 
 
-def classical_fwi(observed: torch.Tensor, start: np.ndarray, wavelet: torch.Tensor):
+def classical_fwi(observed: torch.Tensor, start: np.ndarray, wavelet: torch.Tensor, schedule=FWI_SCHEDULE):
+    start = np.clip(start, c.VMIN, c.VMAX).astype(np.float32)
     velocity = torch.tensor(start[None], device=observed.device, requires_grad=True)
     optimizer = torch.optim.Adam([velocity], lr=FWI_LEARNING_RATE)
     iterations = 0
-    for cutoff, steps in FWI_SCHEDULE:
+    for cutoff, steps in schedule:
         target = lowpass(observed, cutoff)
         for it in range(steps):
             optimizer.zero_grad(set_to_none=True)
@@ -127,15 +133,29 @@ def network_forward_seconds(net, data: torch.Tensor) -> float:
     return (time.time() - t0) / TIMING_REPEATS
 
 
+def load_network(folder: Path, name: str, device):
+    """The checkpoint plus its training config (compression must match training)."""
+    net = DataToModelNet().to(device)
+    net.load_state_dict(torch.load(folder / name, map_location=device))
+    net.eval()
+    config_path = folder / (Path(name).stem + ".json")
+    config = json.loads(config_path.read_text()) if config_path.exists() else {}
+    return net, config
+
+
+def network_input(data: torch.Tensor, config: dict) -> torch.Tensor:
+    return c.compress(data) if config.get("compress") else data
+
+
 @torch.no_grad()
-def test_set_mae(net, folder: Path, device) -> float:
-    data = torch.tensor(np.load(folder / "test_data.npy"), device=device).float()
+def test_set_mae(net, folder: Path, device, config: dict) -> float:
+    data = network_input(torch.tensor(np.load(folder / "test_data.npy"), device=device).float(), config)
     truth = torch.tensor(np.load(folder / "test_models.npy").astype(np.float32), device=device)
     pred = c.denormalize_velocity(torch.cat([net(data[i:i + 50]) for i in range(0, len(data), 50)]))
     return float((pred - truth).abs().mean())
 
 
-def run_case(name, truth, net, start, wavelet, data_scale, device):
+def run_case(name, truth, net, config, start, wavelet, data_scale, device):
     print(f"case {name}", flush=True)
     with torch.no_grad():
         observed = c.simulate(torch.tensor(truth[None], device=device), wavelet)
@@ -145,17 +165,26 @@ def run_case(name, truth, net, start, wavelet, data_scale, device):
     torch.cuda.synchronize()
     fwi_seconds = time.time() - t0
 
-    net_input = (observed * data_scale).half().float()  # same quantization as the training data
+    # Same float16 quantization as the stored training data, then the same compression.
+    net_input = network_input((observed * data_scale).half().float(), config)
     with torch.no_grad():
         dl_model = c.denormalize_velocity(net(net_input))[0].cpu().numpy()
     dl_seconds = network_forward_seconds(net, net_input)
 
-    for label, model in (("true", truth), ("start", start), ("fwi", fwi_model), ("dl", dl_model)):
+    t0 = time.time()
+    hybrid_model, hybrid_iterations = classical_fwi(observed, dl_model, wavelet, HYBRID_SCHEDULE)
+    torch.cuda.synchronize()
+    hybrid_seconds = dl_seconds + time.time() - t0
+
+    for label, model in (("true", truth), ("start", start), ("fwi", fwi_model), ("dl", dl_model),
+                         ("hybrid", hybrid_model)):
         save_png(model, IMG_DIR / f"{name}-{label}.png")
     return {
-        "mae_mps": {"start": mae(start, truth), "fwi": mae(fwi_model, truth), "dl": mae(dl_model, truth)},
-        "seconds": {"fwi": round(fwi_seconds, 1), "dl": round(dl_seconds, 4)},
+        "mae_mps": {"start": mae(start, truth), "fwi": mae(fwi_model, truth), "dl": mae(dl_model, truth),
+                    "hybrid": mae(hybrid_model, truth)},
+        "seconds": {"fwi": round(fwi_seconds, 1), "dl": round(dl_seconds, 4), "hybrid": round(hybrid_seconds, 1)},
         "fwi_iterations": iterations,
+        "hybrid_iterations": hybrid_iterations,
     }
 
 
@@ -166,9 +195,10 @@ def main() -> None:
     meta = json.loads((args.data / "meta.json").read_text())
     wavelet = torch.tensor(c.ricker(c.F0, c.DT, c.NT), device=device)
 
-    net = DataToModelNet().to(device)
-    net.load_state_dict(torch.load(args.data / "model.pt", map_location=device))
-    net.eval()
+    net, config = load_network(args.data, args.model, device)
+    if args.eval_only:
+        print(f"{args.model}: test-set MAE {test_set_mae(net, args.data, device, config):.1f} m/s")
+        return
     start = starting_model(np.load(args.data / "train_models.npy"))
     test_models = np.load(args.data / "test_models.npy")
     test_index = most_structured(test_models)
@@ -179,7 +209,7 @@ def main() -> None:
         "out-of-distribution": out_of_distribution_model(),
     }
     results = {
-        name: run_case(name, truth, net, start, wavelet, meta["data_scale"], device)
+        name: run_case(name, truth, net, config, start, wavelet, meta["data_scale"], device)
         for name, truth in cases.items()
     }
     payload = json.dumps({
@@ -191,8 +221,14 @@ def main() -> None:
         "train_size": int(np.load(args.data / "train_models.npy", mmap_mode="r").shape[0]),
         "test_size": int(len(test_models)),
         "test_index": test_index,
-        "dl_test_set_mae_mps": round(test_set_mae(net, args.data, device), 1),
+        "dl_test_set_mae_mps": round(test_set_mae(net, args.data, device, config), 1),
+        "dl_val_mae_mps": config.get("best_val_mae_mps"),
+        "train_minutes": config.get("train_minutes"),
+        "train_epochs": config.get("epochs"),
+        "dataset_minutes": meta.get("generation_minutes"),
+        "improvements": {k: config.get(k) for k in ("compress", "grad_loss", "ema", "amp")},
         "fwi_schedule": [{"lowpass_hz": f, "iterations": n} for f, n in FWI_SCHEDULE],
+        "hybrid_schedule": [{"lowpass_hz": f, "iterations": n} for f, n in HYBRID_SCHEDULE],
         "cases": results,
     }, indent=2)
     METRICS_FILE.write_text(payload + "\n")

@@ -258,7 +258,7 @@
         <p>The expensive part moves from inference time to training time, and the physics enters only through the examples. That trade-off shapes everything below.</p>
 
         <h3>A small experiment</h3>
-        <p>To make the comparison concrete, a network was trained specifically for this site. Five surface sources and 64 receivers record a 640 m × 640 m model at <span data-fill="f0_hz"></span> Hz. The <span data-fill="train_size" data-format="thousands"></span> training models come from a random generator of curved layers, faults and intrusions. The network is a small convolutional encoder–decoder. Simulating the training data took about 10 minutes and training about 13 minutes, both on a laptop GPU. The classical baseline is FWI run through the same simulator. It starts from a smooth 1D model (the average depth profile of the training models) and works from low to high frequencies.</p>
+        <p>To make the comparison concrete, a network was trained specifically for this site. Five surface sources and 64 receivers record a 640 m × 640 m model at <span data-fill="f0_hz"></span> Hz. The <span data-fill="train_size" data-format="thousands"></span> training models come from a random generator of curved layers, faults and intrusions. The network is a small convolutional encoder–decoder. Simulating the training data took about <span data-fill="dataset_minutes" data-format="wholeMinutes"></span> and training about <span data-fill="train_minutes" data-format="wholeMinutes"></span>, both on a laptop GPU. Two cheap changes improved the network: twice as much training data and an exponential moving average of its weights, which lowered its average error on held-out models from 62 to <span data-fill="dl_test_set_mae_mps" data-format="mps"></span>. Compressing the input amplitudes and an edge-aware loss were also tried and did not help. The classical baseline is FWI run through the same simulator. It starts from a smooth 1D model (the average depth profile of the training models) and works from low to high frequencies. A third method, DL + FWI, uses the network's model as the starting point for a short FWI run of <span data-fill="cases.in-distribution.hybrid_iterations"></span> iterations.</p>
 
         <section class="demo wide" id="dl-comparison" aria-labelledby="dl-title">
           <h4 id="dl-title">Compare: classical FWI and deep learning</h4>
@@ -292,12 +292,14 @@
                 <option value="fwi" selected>Classical FWI</option>
                 <option value="start">Starting model</option>
                 <option value="dl">Deep learning</option>
+                <option value="hybrid">DL + FWI</option>
                 <option value="true">True model</option>
               </select>
             </label>
             <label class="control"><span class="label">Right image</span>
               <select data-role="right">
-                <option value="dl" selected>Deep learning</option>
+                <option value="hybrid" selected>DL + FWI</option>
+                <option value="dl">Deep learning</option>
                 <option value="fwi">Classical FWI</option>
                 <option value="true">True model</option>
                 <option value="start">Starting model</option>
@@ -315,8 +317,9 @@
         <h3>What the comparison shows</h3>
         <ul>
           <li><strong>Speed.</strong> Once trained, the network inverts a dataset in about <span data-fill="cases.in-distribution.seconds.dl" data-format="ms"></span>. The classical FWI run takes about <span data-fill="cases.in-distribution.seconds.fwi" data-format="minutes"></span> on the same GPU. The cost has moved rather than vanished: the training set and the training run would have to be redone for a different survey layout or frequency band.</li>
-          <li><strong>Familiar geology.</strong> On models like its training data, the network is accurate: its average error over <span data-fill="test_size"></span> held-out test models is <span data-fill="dl_test_set_mae_mps" data-format="mps"></span>. On the example shown, the two methods land close together (<span data-fill="cases.in-distribution.mae_mps.fwi" data-format="mps"></span> for FWI, <span data-fill="cases.in-distribution.mae_mps.dl" data-format="mps"></span> for the network). The network's model is smoother, and it misses the small body near the bottom right.</li>
+          <li><strong>Familiar geology.</strong> On models like its training data, the network is accurate: its average error over <span data-fill="test_size"></span> held-out test models is <span data-fill="dl_test_set_mae_mps" data-format="mps"></span>. On the example shown, the two methods land close together (<span data-fill="cases.in-distribution.mae_mps.fwi" data-format="mps"></span> for FWI, <span data-fill="cases.in-distribution.mae_mps.dl" data-format="mps"></span> for the network), and the network's model is smoother.</li>
           <li><strong>Unfamiliar geology.</strong> The second model has steep, curved layers and a slow lens, features the generator never produces. FWI still recovers the lens and the shape of the layers (<span data-fill="cases.out-of-distribution.mae_mps.fwi" data-format="mps"></span>), because it fits this particular dataset through the physics. The network returns a plausible-looking layered model with no lens at all (<span data-fill="cases.out-of-distribution.mae_mps.dl" data-format="mps"></span>). It can only reproduce the kinds of structure it was trained on.</li>
+          <li><strong>Best of both, when the network is right.</strong> Starting FWI from the network's model gives the most accurate result on the familiar example (<span data-fill="cases.in-distribution.mae_mps.hybrid" data-format="mps"></span>) in about <span data-fill="cases.in-distribution.seconds.hybrid" data-format="seconds"></span>, a third of the classical run's time. On the unfamiliar model, the refinement brings the lens back but cannot undo the network's wrong layers in so few iterations (<span data-fill="cases.out-of-distribution.mae_mps.hybrid" data-format="mps"></span>): a learned starting model helps only as much as it is right.</li>
         </ul>
         <p class="note">This is one small experiment on synthetic, noise-free data. It illustrates the trade-off; it does not rank methods. The test example was chosen by a fixed rule (the test model with the largest velocity variation), not by how either method performed on it. Code: <code>scripts/dl/</code> in the repository.</p>
 

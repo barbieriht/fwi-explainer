@@ -151,6 +151,17 @@ def random_model(rng: np.random.Generator) -> np.ndarray:
     return np.clip(model, VMIN, VMAX).astype(np.float32)
 
 
+# Signed log compression of the (globally scaled) shot gathers: the direct wave
+# dominates the raw amplitudes, so deep reflections are nearly invisible to a
+# network without it. Maps [-1, 1] to [-1, 1]; applied on the fly, the stored
+# dataset is unchanged.
+COMPRESS_SCALE = 1e-3
+
+
+def compress(data: torch.Tensor) -> torch.Tensor:
+    return torch.sign(data) * torch.log1p(data.abs() / COMPRESS_SCALE) / math.log1p(1 / COMPRESS_SCALE)
+
+
 def normalize_velocity(v):
     return (v - VMIN) / (VMAX - VMIN) * 2 - 1
 

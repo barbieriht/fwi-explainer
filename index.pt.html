@@ -258,7 +258,7 @@
         <p>A parte cara sai do momento da inferência e vai para o treino, e a física entra apenas pelos exemplos. Esse compromisso define tudo o que vem a seguir.</p>
 
         <h3>Um pequeno experimento</h3>
-        <p>Para tornar a comparação concreta, uma rede foi treinada especificamente para este site. Cinco fontes e 64 receptores na superfície registram um modelo de 640 m × 640 m a <span data-fill="f0_hz"></span> Hz. Os <span data-fill="train_size" data-format="thousands"></span> modelos de treino vêm de um gerador aleatório de camadas curvas, falhas e intrusões. A rede é um pequeno codificador–decodificador convolucional. Simular os dados de treino levou cerca de 10 minutos e o treino cerca de 13 minutos, ambos numa GPU de notebook. A referência clássica é o FWI rodando sobre o mesmo simulador. Ele parte de um modelo 1D suave (o perfil médio em profundidade dos modelos de treino) e vai de frequências baixas para altas.</p>
+        <p>Para tornar a comparação concreta, uma rede foi treinada especificamente para este site. Cinco fontes e 64 receptores na superfície registram um modelo de 640 m × 640 m a <span data-fill="f0_hz"></span> Hz. Os <span data-fill="train_size" data-format="thousands"></span> modelos de treino vêm de um gerador aleatório de camadas curvas, falhas e intrusões. A rede é um pequeno codificador–decodificador convolucional. Simular os dados de treino levou cerca de <span data-fill="dataset_minutes" data-format="wholeMinutes"></span> e o treino cerca de <span data-fill="train_minutes" data-format="wholeMinutes"></span>, ambos numa GPU de notebook. Duas mudanças baratas melhoraram a rede: o dobro de dados de treino e uma média móvel exponencial dos seus pesos, o que reduziu seu erro médio em modelos não vistos de 62 para <span data-fill="dl_test_set_mae_mps" data-format="mps"></span>. Também foram testadas a compressão das amplitudes de entrada e uma função de perda sensível a bordas, sem ganho. A referência clássica é o FWI rodando sobre o mesmo simulador. Ele parte de um modelo 1D suave (o perfil médio em profundidade dos modelos de treino) e vai de frequências baixas para altas. Um terceiro método, DL + FWI, usa o modelo da rede como ponto de partida para uma execução curta de FWI, com <span data-fill="cases.in-distribution.hybrid_iterations"></span> iterações.</p>
 
         <section class="demo wide" id="dl-comparison" aria-labelledby="dl-title">
           <h4 id="dl-title">Compare: FWI clássico e deep learning</h4>
@@ -292,12 +292,14 @@
                 <option value="fwi" selected>FWI clássico</option>
                 <option value="start">Modelo inicial</option>
                 <option value="dl">Deep learning</option>
+                <option value="hybrid">DL + FWI</option>
                 <option value="true">Modelo real</option>
               </select>
             </label>
             <label class="control"><span class="label">Imagem da direita</span>
               <select data-role="right">
-                <option value="dl" selected>Deep learning</option>
+                <option value="hybrid" selected>DL + FWI</option>
+                <option value="dl">Deep learning</option>
                 <option value="fwi">FWI clássico</option>
                 <option value="true">Modelo real</option>
                 <option value="start">Modelo inicial</option>
@@ -315,8 +317,9 @@
         <h3>O que a comparação mostra</h3>
         <ul>
           <li><strong>Velocidade.</strong> Depois de treinada, a rede inverte um conjunto de dados em cerca de <span data-fill="cases.in-distribution.seconds.dl" data-format="ms"></span>. O FWI clássico leva cerca de <span data-fill="cases.in-distribution.seconds.fwi" data-format="minutes"></span> na mesma GPU. O custo mudou de lugar, não desapareceu: o conjunto de treino e o treino teriam de ser refeitos para outra geometria de aquisição ou outra banda de frequência.</li>
-          <li><strong>Geologia familiar.</strong> Em modelos parecidos com os de treino, a rede é precisa: seu erro médio em <span data-fill="test_size"></span> modelos de teste não vistos é de <span data-fill="dl_test_set_mae_mps" data-format="mps"></span>. No exemplo mostrado, os dois métodos ficam próximos (<span data-fill="cases.in-distribution.mae_mps.fwi" data-format="mps"></span> para o FWI, <span data-fill="cases.in-distribution.mae_mps.dl" data-format="mps"></span> para a rede). O modelo da rede é mais suave e deixa escapar o pequeno corpo perto do canto inferior direito.</li>
+          <li><strong>Geologia familiar.</strong> Em modelos parecidos com os de treino, a rede é precisa: seu erro médio em <span data-fill="test_size"></span> modelos de teste não vistos é de <span data-fill="dl_test_set_mae_mps" data-format="mps"></span>. No exemplo mostrado, os dois métodos ficam próximos (<span data-fill="cases.in-distribution.mae_mps.fwi" data-format="mps"></span> para o FWI, <span data-fill="cases.in-distribution.mae_mps.dl" data-format="mps"></span> para a rede), e o modelo da rede é mais suave.</li>
           <li><strong>Geologia desconhecida.</strong> O segundo modelo tem camadas íngremes e curvas e uma lente lenta, características que o gerador nunca produz. O FWI ainda recupera a lente e a forma das camadas (<span data-fill="cases.out-of-distribution.mae_mps.fwi" data-format="mps"></span>), porque ajusta este conjunto de dados específico através da física. A rede devolve um modelo em camadas de aparência plausível, sem lente nenhuma (<span data-fill="cases.out-of-distribution.mae_mps.dl" data-format="mps"></span>). Ela só consegue reproduzir os tipos de estrutura com que foi treinada.</li>
+          <li><strong>O melhor dos dois, quando a rede acerta.</strong> Partir o FWI do modelo da rede dá o resultado mais preciso no exemplo familiar (<span data-fill="cases.in-distribution.mae_mps.hybrid" data-format="mps"></span>) em cerca de <span data-fill="cases.in-distribution.seconds.hybrid" data-format="seconds"></span>, um terço do tempo do FWI clássico. No modelo desconhecido, o refinamento traz a lente de volta, mas não consegue desfazer as camadas erradas da rede em tão poucas iterações (<span data-fill="cases.out-of-distribution.mae_mps.hybrid" data-format="mps"></span>): um modelo inicial aprendido só ajuda na medida em que está certo.</li>
         </ul>
         <p class="note">Este é um único experimento pequeno, com dados sintéticos e sem ruído. Ele ilustra o compromisso; não classifica métodos. O exemplo de teste foi escolhido por uma regra fixa (o modelo de teste com maior variação de velocidade), não pelo desempenho de nenhum dos métodos nele. Código: <code>scripts/dl/</code> no repositório.</p>
 

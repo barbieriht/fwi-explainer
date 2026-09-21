@@ -18,9 +18,9 @@ University of São Paulo (USP).
 - **The inverse problem.** Adjoint-state FWI in the browser. A misfit
   landscape and four inversion scenarios show cycle-skipping, and two ways
   around it.
-- **Deep learning.** A classical-vs-network comparison computed offline on a
-  laptop GPU, including a case where the network fails on unfamiliar
-  geology.
+- **Deep learning.** Classical FWI, a trained network and a DL + FWI hybrid,
+  compared offline on a laptop GPU, including a case where the network fails
+  on unfamiliar geology.
 - **Research landscape.** A snapshot of the studies collected through the
   author's database searches (clearly labeled as unscreened), and a short
   curated reading list.
@@ -125,17 +125,35 @@ node scripts/build-page.js
 
 ## Deep-learning comparison (offline)
 
-The deep-learning section shows one pre-computed comparison between classical FWI
-and a trained network. Everything is generated locally with PyTorch on a
-consumer GPU; no cloud services are involved. Outputs that are committed:
-`assets/img/dl/*.png` and `assets/data/dl-comparison.{json,js}`.
+The deep-learning section compares three methods on one familiar and one
+unfamiliar velocity model: classical FWI from a smooth 1D start, a trained
+data-to-model network, and **DL + FWI**, a short FWI run (60 iterations)
+that starts from the network's prediction. Everything is generated locally
+with PyTorch on a consumer GPU; no cloud services are involved. Outputs that
+are committed: `assets/img/dl/*.png` and `assets/data/dl-comparison.{json,js}`.
 
 ```sh
 cd scripts/dl
-python3 generate_dataset.py --out ../../data-src/dl   # synthetic models + shot gathers (~10 min)
-python3 train.py --data ../../data-src/dl             # encoder-decoder network
-python3 compare.py --data ../../data-src/dl           # classical FWI vs network, writes site assets
+python3 generate_dataset.py --out ../../data-src/dl                         # 8k training samples
+python3 generate_dataset.py --out ../../data-src/dl --append 8000 --seed 7  # grow to 16k
+python3 train.py --data ../../data-src/dl --epochs 50 --ema 0.999 --amp     # final recipe
+python3 compare.py --data ../../data-src/dl                                 # FWI, network, DL + FWI
+python3 compare.py --data ../../data-src/dl --model model-baseline.pt --eval-only   # test-set MAE only
 ```
+
+Cheap improvements were tested one at a time (every run is logged in
+`data-src/dl/ablations.json`; validation MAE on 400 held-out models):
+
+| Run | Validation MAE |
+|---|---|
+| Baseline: L1 loss, 8k samples, 60 epochs | 59.1 m/s |
+| + signed-log input compression + edge-aware loss | 62.5 m/s (worse) |
+| + input compression only | 60.0 m/s (no gain) |
+| **16k samples + EMA of weights, 50 epochs** | **49.0 m/s** |
+
+The final network lowers the test-set error from 62 to 50 m/s. The
+unfamiliar-geology case stays out of reach for the network alone, by design:
+the generator never produces its features.
 
 `data-src/` (dataset and checkpoints) is git-ignored. The simulator in
 `scripts/dl/common.py` uses the same scheme as the browser solver and matches

@@ -11,10 +11,20 @@
   },
   "f0_hz": 12.0,
   "shots": 5,
-  "train_size": 8000,
+  "train_size": 16000,
   "test_size": 200,
   "test_index": 1,
-  "dl_test_set_mae_mps": 62.1,
+  "dl_test_set_mae_mps": 50.0,
+  "dl_val_mae_mps": 49.0,
+  "train_minutes": 14.4,
+  "train_epochs": 50,
+  "dataset_minutes": 25.8,
+  "improvements": {
+    "compress": false,
+    "grad_loss": 0.0,
+    "ema": 0.999,
+    "amp": true
+  },
   "fwi_schedule": [
     {
       "lowpass_hz": 5.0,
@@ -29,30 +39,46 @@
       "iterations": 60
     }
   ],
+  "hybrid_schedule": [
+    {
+      "lowpass_hz": 8.0,
+      "iterations": 30
+    },
+    {
+      "lowpass_hz": null,
+      "iterations": 30
+    }
+  ],
   "cases": {
     "in-distribution": {
       "mae_mps": {
-        "start": 540.594970703125,
-        "fwi": 61.73041534423828,
-        "dl": 80.16191101074219
+        "start": 541.2783813476562,
+        "fwi": 61.735511779785156,
+        "dl": 67.07650756835938,
+        "hybrid": 52.201210021972656
       },
       "seconds": {
-        "fwi": 256.9,
-        "dl": 0.0032
+        "fwi": 289.5,
+        "dl": 0.0027,
+        "hybrid": 96.2
       },
-      "fwi_iterations": 180
+      "fwi_iterations": 180,
+      "hybrid_iterations": 60
     },
     "out-of-distribution": {
       "mae_mps": {
-        "start": 706.7991943359375,
-        "fwi": 103.01905822753906,
-        "dl": 230.37892150878906
+        "start": 706.0928344726562,
+        "fwi": 103.1682357788086,
+        "dl": 261.8916015625,
+        "hybrid": 198.03640747070312
       },
       "seconds": {
-        "fwi": 283.4,
-        "dl": 0.0032
+        "fwi": 281.9,
+        "dl": 0.0037,
+        "hybrid": 93.9
       },
-      "fwi_iterations": 180
+      "fwi_iterations": 180,
+      "hybrid_iterations": 60
     }
   }
 }
