@@ -16,6 +16,7 @@
   --warn-text: #5c4400;
   --series-a: #1f5fa8;
   --series-b: #b8440f;
+  --series-muted: #878e99;
   --chart-grid: #e6e8eb;
 
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -41,6 +42,7 @@
     --warn-text: #f3dc9b;
     --series-a: #7fb2ec;
     --series-b: #f0915a;
+    --series-muted: #6f7785;
     --chart-grid: #2a2f37;
   }
 }
@@ -58,5 +60,6 @@
   --warn-text: #f3dc9b;
   --series-a: #7fb2ec;
   --series-b: #f0915a;
+  --series-muted: #6f7785;
   --chart-grid: #2a2f37;
 }

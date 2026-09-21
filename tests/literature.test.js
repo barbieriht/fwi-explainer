@@ -36,12 +36,3 @@ test('LaTeX conversion refuses unknown commands', () => {
   assert.equal(latexToText('{CNN} --- {Fourier}', 't'), 'CNN — Fourier');
   assert.throws(() => latexToText('\\emph{x}', 't'), /unhandled LaTeX/);
 });
-
-test('the script twin carries the same data as the JSON', () => {
-  const fs = require('fs');
-  const path = require('path');
-  const js = fs.readFileSync(path.join(__dirname, '..', 'assets/data/literature.js'), 'utf8');
-  const sandbox = { window: {} };
-  new Function('window', js)(sandbox.window);
-  assert.deepEqual(sandbox.window.FWI_DATA.literature, data);
-});

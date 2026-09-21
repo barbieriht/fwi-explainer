@@ -21,8 +21,11 @@ University of São Paulo (USP).
 - **Deep learning.** A classical-vs-network comparison computed offline on a
   laptop GPU, including a case where the network fails on unfamiliar
   geology.
-- **Research landscape, open problems, references.** Built from the author's
-  bibliography (40 papers), with every citation resolving to a real entry.
+- **Research landscape.** A snapshot of the studies collected through the
+  author's database searches (clearly labeled as unscreened), and a short
+  curated reading list.
+- **Open problems, references.** Built from the author's bibliography, with
+  every citation resolving to a real entry.
 
 | Forward modeling | Cycle-skipping |
 |---|---|
@@ -92,6 +95,26 @@ node scripts/build-page.js --check  # fail if out of date (also a test)
 Tests fail if a citation does not resolve, if a tag does not follow from its
 title, if either page is out of date, or if the two language versions drift
 apart structurally.
+
+### Search snapshot (Research landscape)
+
+```sh
+cp ~/Zotero/zotero.sqlite /tmp/zotero-copy.sqlite   # Zotero locks the live file
+python3 scripts/import-zotero.py /tmp/zotero-copy.sqlite --collection Seismic
+```
+
+Reads the collection and its sub-collections (except `Removed`), removes
+duplicates by DOI or title, and assigns topics by keyword rules on title and
+abstract. Only aggregate counts are written, to
+`assets/data/search-snapshot.{json,js}`; no per-study field is published.
+
+### Curated readings
+
+`content/readings.csv` lists candidate readings (`id` from the reference data,
+page `group`, one sentence in English and Portuguese, the `source` the
+sentence is based on, and `approved`). Draft sentences restate each paper's
+abstract. Only rows with `approved=yes` appear on the page, after
+`node scripts/build-page.js`.
 
 ## Deep-learning comparison (offline)
 

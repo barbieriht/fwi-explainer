@@ -62,22 +62,18 @@
       'dl.dlTime': '{time} (one forward pass)',
       'dl.minutes': '{n} minutes',
 
-      'ls.classical': 'Classical FWI',
-      'ls.model': 'Survey: network generates the model',
-      'ls.data': 'Survey: network compares the data',
-      'ls.prior': 'Survey: network acts as a prior',
-      'ls.ml': 'Machine-learning-oriented work',
-      'ls.legendSurvey': 'Deep-learning FWI survey',
-      'ls.allTopics': 'All topics',
-      'ls.aria': 'Timeline of the bibliography: one row per group, one dot per paper. The list below the chart contains the same papers.',
-      'ls.count': 'Showing {shown} of {total} papers.',
-      'ls.countTagged': 'Showing {shown} of {total} papers tagged {tags}.',
-      'ls.or': ' or ',
-      'ls.topics': 'Topics',
-      'ls.openDoi': 'Open publication (doi:{doi})',
-      'ls.openArxiv': 'Open on arXiv',
-      'ls.unverified': 'Some bibliographic fields of this entry have not yet been checked against the publisher record.',
-      'ls.etAl': 'et al.',
+      'sn.studies': 'Studies',
+      'sn.yearsAria': 'Collected studies per year, split into those that mention machine learning or deep learning and the others.',
+      'sn.barTitle': '{year}: {total} studies, {ml} mentioning ML/deep learning',
+      'sn.topicsAria': 'Share of collected studies mentioning each topic, before {year} and from {year} on.',
+      'sn.dotTitle': '{topic}: {early}% before {year}, {late}% from {year} on',
+      'sn.summary': '{n} unique studies, snapshot of {date}. Mentions of machine learning or deep learning go from {early}% of the studies before {year} to {late}% from {year} on. * {partial} is a partial year.',
+      'sn.topic.ml': 'ML / deep learning',
+      'sn.topic.multiparameter': 'multiparameter / elastic',
+      'sn.topic.time-lapse': 'time-lapse / 4D',
+      'sn.topic.uncertainty': 'uncertainty / Bayesian',
+      'sn.topic.cycle-skipping': 'cycle-skipping / misfit',
+
     },
     pt: {
       'common.play': 'Iniciar',
@@ -134,45 +130,21 @@
       'dl.dlTime': '{time} (uma única passada)',
       'dl.minutes': '{n} minutos',
 
-      'ls.classical': 'FWI clássico',
-      'ls.model': 'Levantamento: a rede gera o modelo',
-      'ls.data': 'Levantamento: a rede compara os dados',
-      'ls.prior': 'Levantamento: a rede atua como prior',
-      'ls.ml': 'Trabalhos orientados a machine learning',
-      'ls.legendSurvey': 'Levantamento de FWI com deep learning',
-      'ls.allTopics': 'Todos os temas',
-      'ls.aria': 'Linha do tempo da bibliografia: uma faixa por grupo, um ponto por artigo. A lista abaixo do gráfico contém os mesmos artigos.',
-      'ls.count': 'Mostrando {shown} de {total} artigos.',
-      'ls.countTagged': 'Mostrando {shown} de {total} artigos com o tema {tags}.',
-      'ls.or': ' ou ',
-      'ls.topics': 'Temas',
-      'ls.openDoi': 'Abrir publicação (doi:{doi})',
-      'ls.openArxiv': 'Abrir no arXiv',
-      'ls.unverified': 'Alguns campos bibliográficos desta entrada ainda não foram conferidos no registro da editora.',
-      'ls.etAl': 'et al.',
+      'sn.studies': 'Estudos',
+      'sn.yearsAria': 'Estudos reunidos por ano, separados entre os que mencionam machine learning ou deep learning e os demais.',
+      'sn.barTitle': '{year}: {total} estudos, {ml} mencionando ML/deep learning',
+      'sn.topicsAria': 'Fração dos estudos reunidos que menciona cada tema, antes de {year} e a partir de {year}.',
+      'sn.dotTitle': '{topic}: {early}% antes de {year}, {late}% a partir de {year}',
+      'sn.summary': '{n} estudos únicos, retrato de {date}. As menções a machine learning ou deep learning passam de {early}% dos estudos antes de {year} para {late}% a partir de {year}. * {partial} é um ano parcial.',
+      'sn.topic.ml': 'ML / deep learning',
+      'sn.topic.multiparameter': 'multiparâmetro / elástico',
+      'sn.topic.time-lapse': 'time-lapse / 4D',
+      'sn.topic.uncertainty': 'incerteza / bayesiano',
+      'sn.topic.cycle-skipping': 'cycle-skipping / misfit',
+
     },
   };
 
-  // Display names for the title-derived topic tags.
-  const TAGS_PT = {
-    multiparameter: 'multiparâmetro',
-    crosstalk: 'crosstalk',
-    'cycle-skipping': 'cycle-skipping',
-    uncertainty: 'incerteza',
-    'time-lapse': 'time-lapse (4D)',
-    CNN: 'CNN',
-    MLP: 'MLP',
-    'neural representation': 'representação neural',
-    'physics-informed': 'informado por física',
-    'self-supervised': 'autossupervisionado',
-    'learned prior': 'prior aprendido',
-    'misfit function': 'função de misfit',
-    reparameterization: 'reparametrização',
-    'neural operator': 'operador neural',
-    multiscale: 'multiescala',
-    'optimal transport': 'transporte ótimo',
-    benchmark: 'benchmark',
-  };
 
   const lang = /^pt/i.test(document.documentElement.lang) ? 'pt' : 'en';
   const locale = lang === 'pt' ? 'pt-BR' : 'en-US';
@@ -190,9 +162,6 @@
     return Number(value).toLocaleString(locale, { minimumFractionDigits: digits || 0, maximumFractionDigits: digits || 0 });
   }
 
-  function tag(name) {
-    return lang === 'pt' && TAGS_PT[name] ? TAGS_PT[name] : name;
-  }
 
   // Keep the reader's place when switching language: carry the #section over.
   document.querySelectorAll('[data-lang-switch] a').forEach(function (link) {
@@ -202,5 +171,5 @@
   });
 
   root.FWI = root.FWI || {};
-  root.FWI.i18n = { lang: lang, t: t, num: num, tag: tag, STRINGS: STRINGS };
+  root.FWI.i18n = { lang: lang, t: t, num: num, STRINGS: STRINGS };
 })(globalThis);
