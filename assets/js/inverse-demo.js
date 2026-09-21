@@ -18,6 +18,8 @@
     const MAX_ITERATIONS = 30;
     const MULTISCALE_SWITCH = 10; // iterations at low frequency before switching
     const MODEL_CANVAS_PX = 300;
+  const FRAME_BUDGET_MS = 12; // work per animation frame before yielding to the browser
+  const ITERATION_DONE = { iterationDone: true };
 
     const SCENARIOS = {
       good: { v0: 2000, band: 'high', geometry: 'crosswell' },
@@ -57,14 +59,19 @@
     const observedCache = {};
 
     const state = {
-      run: null, // { inversion, freq, iteration, generator, segments: [[[it, J/J0]]], switchAt }
+      // run: { band, geometry, freq, phase, inversion, model, iteration, lastRatio,
+      //        generator, segments: [[[iteration, J/J0]]], switchAt }
+      run: null,
       playing: false,
       stopAfterIteration: false,
     };
 
-    function observedFor(freq, geometry) {
+    // Observed data for a band and geometry, simulated in slices and cached.
+    function* observedSteps(freq, geometry) {
       const key = geometry + ':' + freq;
-      if (!observedCache[key]) observedCache[key] = FWI.inversion.simulate(setup.survey(freq, geometry), truth);
+      if (!observedCache[key]) {
+        observedCache[key] = yield* FWI.inversion.simulateSteps(setup.survey(freq, geometry), truth);
+      }
       return observedCache[key];
     }
 
@@ -80,21 +87,41 @@
       return band === 'high' ? setup.HIGH_HZ : setup.LOW_HZ;
     }
 
-    function newInversion(freq, geometry, model) {
-      return FWI.inversion.createInversion(setup.survey(freq, geometry), observedFor(freq, geometry), model, {
-        vmin: setup.VMIN, vmax: setup.VMAX,
-      });
+    // The whole run as one generator: it yields shot indices while working and
+    // ITERATION_DONE after each iteration, so the pump can render in between.
+    function* runSteps(run) {
+      while (run.iteration < MAX_ITERATIONS) {
+        if (!run.inversion) {
+          run.phase = 'observed';
+          const observed = yield* observedSteps(run.freq, run.geometry);
+          run.inversion = FWI.inversion.createInversion(setup.survey(run.freq, run.geometry), observed, run.model, {
+            vmin: setup.VMIN, vmax: setup.VMAX,
+          });
+        }
+        run.phase = 'iterate';
+        yield* run.inversion.iterate();
+        run.iteration++;
+        run.model = run.inversion.model;
+        recordHistory(run);
+        if (run.band === 'multi' && run.freq === setup.LOW_HZ && run.iteration === MULTISCALE_SWITCH) {
+          run.freq = setup.HIGH_HZ;
+          run.switchAt = run.iteration;
+          run.inversion = null;
+          run.segments.push([]);
+        }
+        yield ITERATION_DONE;
+      }
     }
 
     function createRun() {
       const band = selectedBand();
-      const geometry = selectedGeometry();
-      const freq = startFreq(band);
-      const inversion = newInversion(freq, geometry, setup.homogeneous(Number(el.v0.value)));
-      return {
-        band: band, geometry: geometry, freq: freq, inversion: inversion, iteration: 0,
-        generator: inversion.iterate(), segments: [[]], switchAt: null,
+      const run = {
+        band: band, geometry: selectedGeometry(), freq: startFreq(band), phase: 'observed',
+        inversion: null, model: setup.homogeneous(Number(el.v0.value)), iteration: 0, lastRatio: 1,
+        segments: [[]], switchAt: null,
       };
+      run.generator = runSteps(run);
+      return run;
     }
 
     // ---------- rendering ----------
@@ -112,58 +139,58 @@
       const h = run.inversion.history;
       const offset = run.switchAt || 0;
       run.segments[run.segments.length - 1] = h.map(function (j, i) { return [offset + i, j / h[0]]; });
+      run.lastRatio = h[h.length - 1] / h[0];
     }
 
     function render() {
       const geometry = selectedGeometry();
       setup.drawModel(el.truth, truth, geometry);
-      setup.drawModel(el.current, state.run ? state.run.inversion.model : setup.homogeneous(Number(el.v0.value)), geometry);
+      setup.drawModel(el.current, state.run ? state.run.model : setup.homogeneous(Number(el.v0.value)), geometry);
       renderChart();
       const run = state.run;
       if (!run || run.iteration === 0) {
         el.progress.textContent = t('inv.progressZero', { max: MAX_ITERATIONS });
         return;
       }
-      const h = run.inversion.history;
       el.progress.textContent = t('inv.progress', {
-        i: run.iteration, max: MAX_ITERATIONS, f: run.freq, pct: num(100 * h[h.length - 1] / h[0], 1),
+        i: run.iteration, max: MAX_ITERATIONS, f: run.freq, pct: num(100 * run.lastRatio, 1),
       });
     }
 
     // ---------- run loop ----------
 
-    function finishIteration(run) {
-      run.iteration++;
-      recordHistory(run);
-      if (run.band === 'multi' && run.freq === setup.LOW_HZ && run.iteration === MULTISCALE_SWITCH) {
-        run.freq = setup.HIGH_HZ;
-        run.switchAt = run.iteration;
-        run.inversion = newInversion(run.freq, run.geometry, run.inversion.model);
-        run.segments.push([]);
-      }
-      run.generator = run.inversion.iterate();
-      render();
+    function workStatus(run, shot) {
+      return run.phase === 'observed'
+        ? t('inv.simulating')
+        : t('inv.computing', { s: shot + 1, n: setup.GEOMETRIES[run.geometry].shots.length });
     }
 
+    // Advance the run for about one frame's worth of work, then let the browser paint.
     function pump() {
       const run = state.run;
       if (!state.playing || !run) return;
-      const r = run.generator.next();
-      if (r.done) {
-        finishIteration(run);
-        if (run.iteration >= MAX_ITERATIONS) {
+      const start = performance.now();
+      let shot = 0;
+      while (performance.now() - start < FRAME_BUDGET_MS) {
+        const r = run.generator.next();
+        if (r.done || run.iteration >= MAX_ITERATIONS) {
+          render();
           setPlaying(false);
           el.status.textContent = t('inv.finished', { max: MAX_ITERATIONS });
           return;
         }
-        if (state.stopAfterIteration) {
-          setPlaying(false);
-          el.status.textContent = t('inv.pausedOne');
-          return;
+        if (r.value === ITERATION_DONE) {
+          render();
+          if (state.stopAfterIteration) {
+            setPlaying(false);
+            el.status.textContent = t('inv.pausedOne');
+            return;
+          }
+          break;
         }
-      } else {
-        el.status.textContent = t('inv.computing', { s: r.value + 1, n: setup.GEOMETRIES[run.geometry].shots.length });
+        shot = r.value || 0;
       }
+      el.status.textContent = workStatus(run, shot);
       setTimeout(pump, 0);
     }
 
@@ -178,10 +205,7 @@
         return;
       }
       if (alreadyRunning) return; // the existing pump loop picks up the new mode
-      if (!state.run || state.run.iteration >= MAX_ITERATIONS) {
-        el.status.textContent = t('inv.simulating');
-        state.run = createRun();
-      }
+      if (!state.run || state.run.iteration >= MAX_ITERATIONS) state.run = createRun();
       setTimeout(pump, 0);
     }
 

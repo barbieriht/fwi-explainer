@@ -110,9 +110,13 @@
       ctx.fill();
       ctx.stroke();
     });
+    // Dark squares with a light outline stay visible on slow and fast velocities.
     ctx.fillStyle = '#1c1f24';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.lineWidth = 1;
     geometry.receivers.forEach(function (r) {
       ctx.fillRect((r.ix + 0.5) * cell - 2, (r.iz + 0.5) * cell - 2, 4, 4);
+      ctx.strokeRect((r.ix + 0.5) * cell - 2.5, (r.iz + 0.5) * cell - 2.5, 5, 5);
     });
   }
 

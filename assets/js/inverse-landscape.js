@@ -23,6 +23,7 @@
     const MIDDLE_RECEIVER = 12; // same depth as the middle shot
     const MAX_LAG_SECONDS = 0.25;
     const FREQS = [setup.LOW_HZ, setup.HIGH_HZ];
+  const FRAME_BUDGET_MS = 12; // work per animation frame before yielding to the browser
 
     const velocities = [];
     for (let v = V_START; v <= V_STOP; v += V_STEP) velocities.push(v);
@@ -76,18 +77,33 @@
       return best * setup.DT;
     }
 
+    // Fraction of the simulations completed so far.
+    let finished = 0;
+    const total = FREQS.length * (velocities.length + 1);
+    function done() { return finished / total; }
+
+    // Runs a simulation generator, reporting overall progress at each pause.
+    function* progressOf(inner, progress) {
+      for (;;) {
+        const r = inner.next();
+        if (r.done) return r.value;
+        yield progress;
+      }
+    }
+
     function* computeSteps() {
       const truth = setup.trueModel();
       for (const f of FREQS) {
         const survey = setup.survey(f, GEOMETRY, [MIDDLE_SHOT]);
-        const observed = FWI.inversion.simulate(survey, truth);
+        const observed = yield* progressOf(FWI.inversion.simulateSteps(survey, truth), done());
+        finished++;
         const entry = { misfit: [], traces: [], observed: traceAt(observed[0]) };
         results[f] = entry;
         for (let k = 0; k < velocities.length; k++) {
-          const synthetic = FWI.inversion.simulate(survey, setup.homogeneous(velocities[k]));
+          const synthetic = yield* progressOf(FWI.inversion.simulateSteps(survey, setup.homogeneous(velocities[k])), done());
           entry.misfit.push(FWI.inversion.misfit(synthetic, observed));
           entry.traces.push(traceAt(synthetic[0]));
-          yield (FREQS.indexOf(f) * velocities.length + k + 1) / (FREQS.length * velocities.length);
+          finished++;
         }
       }
     }
@@ -151,7 +167,9 @@
       el.start.disabled = true;
       const steps = computeSteps();
       (function pump() {
-        const r = steps.next();
+        const start = performance.now();
+        let r = steps.next();
+        while (!r.done && performance.now() - start < FRAME_BUDGET_MS) r = steps.next();
         if (!r.done) {
           el.status.textContent = t('ml.progress', { pct: Math.round(100 * r.value) });
           setTimeout(pump, 0);

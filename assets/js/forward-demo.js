@@ -194,9 +194,13 @@
 
     function drawAcquisition() {
       const cell = MODEL_CANVAS_PX / NX;
+      // Dark squares with a light outline stay visible on slow and fast velocities.
       modelCtx.fillStyle = '#1c1f24';
+      modelCtx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      modelCtx.lineWidth = 1;
       RECEIVERS.forEach(function (r) {
         modelCtx.fillRect((r.ix + 0.5) * cell - 2, (r.iz + 0.5) * cell - 2, 4, 4);
+        modelCtx.strokeRect((r.ix + 0.5) * cell - 2.5, (r.iz + 0.5) * cell - 2.5, 5, 5);
       });
       const sx = (state.source.ix + 0.5) * cell;
       const sz = (state.source.iz + 0.5) * cell;

@@ -11,7 +11,9 @@
  *           clamped to [vmin, vmax].
  *
  * Adapted from standard adjoint-state formulations.
- * Heavy loops yield once per shot (generators) so the page stays responsive.
+ * Heavy loops are generators that yield every STEP_CHUNK time steps (the
+ * yielded value is the current shot index), so callers can spread the work
+ * over animation frames and keep the page responsive.
  */
 (function (root) {
   'use strict';
@@ -23,6 +25,7 @@
   const DEFAULT_MAX_UPDATE = 60; // m/s, largest first-trial change per iteration
   const LINE_SEARCH_TRIES = 4;
   const STEP_GROWTH = 1.5;
+  const STEP_CHUNK = 64; // time steps between yields
 
   /*
    * opts: { nx, nz, dx, dt, nt, f0, shots: [{ix, iz}], receivers: [{ix, iz}],
@@ -48,12 +51,22 @@
     });
   }
 
+  // Runs `inner`, re-yielding each of its pauses as `label`; returns its result.
+  function* relabel(inner, label) {
+    for (;;) {
+      const r = inner.next();
+      if (r.done) return r.value;
+      yield label;
+    }
+  }
+
   // Returns the shot record; if `history` is given, stores every snapshot in it.
-  function runShot(survey, model, shot, history) {
+  function* runShotSteps(survey, model, shot, history) {
     const sim = simulationFor(survey, model, [{ ix: shot.ix, iz: shot.iz, wavelet: survey.wavelet }]);
     const cells = survey.nx * survey.nz;
     while (sim.step()) {
       if (history) sim.readWavefield(history.subarray((sim.it - 1) * cells, sim.it * cells));
+      if (sim.it % STEP_CHUNK === 0) yield;
     }
     return sim.seismogram;
   }
@@ -61,8 +74,7 @@
   function* simulateSteps(survey, model) {
     const records = [];
     for (let s = 0; s < survey.shots.length; s++) {
-      records.push(runShot(survey, model, survey.shots[s], null));
-      yield s;
+      records.push(yield* relabel(runShotSteps(survey, model, survey.shots[s], null), s));
     }
     return records;
   }
@@ -96,16 +108,17 @@
 
   // Accumulates -dx^2 * sum_t lambda * p_tt into gradM for one shot and returns
   // its misfit. The dx^2 converts the solver's point-source units (f = w / dx^2).
-  function accumulateShot(survey, model, shot, observed, history, gradM) {
+  function* accumulateShotSteps(survey, model, shot, observed, history, gradM) {
     const cells = survey.nx * survey.nz;
     const nt = survey.nt;
-    const synthetic = runShot(survey, model, shot, history);
+    const synthetic = yield* runShotSteps(survey, model, shot, history);
     const adj = simulationFor(survey, model, adjointSources(survey, synthetic, observed));
     const lambda = new Float32Array(cells);
     const dx2 = survey.dx * survey.dx;
     const invDt2 = 1 / (survey.dt * survey.dt);
     // After adjoint step n' (adj.it = n' + 1) the field pairs with forward index nt - 1 - n'.
     while (adj.step()) {
+      if (adj.it % STEP_CHUNK === 0) yield;
       const n = nt - 1 - adj.it;
       if (n < 1 || n > nt - 2) continue;
       adj.readWavefield(lambda);
@@ -126,8 +139,7 @@
     const gradM = new Float64Array(cells);
     let j = 0;
     for (let s = 0; s < survey.shots.length; s++) {
-      j += accumulateShot(survey, model, survey.shots[s], observed[s], history, gradM);
-      yield s;
+      j += yield* relabel(accumulateShotSteps(survey, model, survey.shots[s], observed[s], history, gradM), s);
     }
     const gradV = new Float32Array(cells);
     for (let i = 0; i < cells; i++) {
