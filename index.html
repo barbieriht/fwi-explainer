@@ -306,48 +306,230 @@
         <p class="note">This is one small experiment on synthetic, noise-free data. It illustrates the trade-off; it does not rank methods. The test example was chosen by a fixed rule (the test model with the largest velocity variation), not by how either method performed on it. Code: <code>scripts/dl/</code> in the repository.</p>
 
         <h3>Technique families in the literature</h3>
-        <p class="placeholder">Pending: this section will survey the technique families in the author's literature corpus (CNN encoder–decoders, physics-informed networks, self-supervised approaches, neural representations, multiparameter inversion and uncertainty quantification), with citations drawn from the corpus.</p>
+        <p>The rest of the field mostly keeps the wave-equation solver and inserts a network at one of three points of the inversion loop. The families below follow the author's bibliography (see the <a href="#research-landscape">research landscape</a>). Papers are grouped by where the network sits and by what their titles say; no summary of their results is implied.</p>
+        <h4>Networks that generate the model</h4>
+        <p>Instead of updating each cell's velocity directly, a neural network produces the velocity model, and the network's weights are optimized through the wave-equation solver. This is the largest group in the survey <span class="cite-list" data-cite-list="group=survey insertion=model">(<a class="cite-item" href="#zhu2022integrating" data-cite="zhu2022integrating">Zhu et al., 2022</a>; <a class="cite-item" href="#sun2023implicit" data-cite="sun2023implicit">Sun et al., 2023</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#wu2025selfsup" data-cite="wu2025selfsup">Wu et al., 2025</a>; <a class="cite-item" href="#wu2026fourier" data-cite="wu2026fourier">Kang et al., 2026</a>; <a class="cite-item" href="#huo2026cnnmmi" data-cite="huo2026cnnmmi">Li et al., 2026c</a>; <a class="cite-item" href="#liu2026reparam" data-cite="liu2026reparam">Liu et al., 2026</a>; <a class="cite-item" href="#qu2026axpcae" data-cite="qu2026axpcae">Niu et al., 2026a</a>; <a class="cite-item" href="#qu2026piedd" data-cite="qu2026piedd">Niu et al., 2026b</a>; <a class="cite-item" href="#han2026kan" data-cite="han2026kan">Wu et al., 2026</a>)</span>. Across the bibliography, titles mention convolutional networks <span class="cite-list" data-cite-list="tag=CNN">(<a class="cite-item" href="#shao2026scfwi" data-cite="shao2026scfwi">Huo et al., 2026</a>; <a class="cite-item" href="#han2026kan" data-cite="han2026kan">Wu et al., 2026</a>)</span>, multilayer perceptrons and implicit neural representations <span class="cite-list" data-cite-list="tag=MLP,neural+representation">(<a class="cite-item" href="#sun2023implicit" data-cite="sun2023implicit">Sun et al., 2023</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#wu2026fourier" data-cite="wu2026fourier">Kang et al., 2026</a>; <a class="cite-item" href="#wang2026metaifwi" data-cite="wang2026metaifwi">Wang et al., 2026</a>)</span>, physics-informed or physics-constrained designs <span class="cite-list" data-cite-list="tag=physics-informed">(<a class="cite-item" href="#huang2025fnofwi" data-cite="huang2025fnofwi">Huang et al., 2025</a>; <a class="cite-item" href="#elmeliegy2026vae" data-cite="elmeliegy2026vae">Elmeliegy et al., 2026</a>; <a class="cite-item" href="#qu2026axpcae" data-cite="qu2026axpcae">Niu et al., 2026a</a>; <a class="cite-item" href="#qu2026piedd" data-cite="qu2026piedd">Niu et al., 2026b</a>)</span> and self-supervised training <span class="cite-list" data-cite-list="tag=self-supervised">(<a class="cite-item" href="#wu2025selfsup" data-cite="wu2025selfsup">Wu et al., 2025</a>; <a class="cite-item" href="#huo2026cnnmmi" data-cite="huo2026cnnmmi">Li et al., 2026c</a>)</span>.</p>
+        <h4>Redesigned and learned misfit functions</h4>
+        <p>Here the change is in how observed and simulated seismograms are compared. The sample-by-sample least-squares misfit is what makes cycle-skipping possible, so replacing it with a different distance, or with a comparison learned by a network, is a direct way to attack the problem <span class="cite-list" data-cite-list="tag=misfit+function">(<a class="cite-item" href="#metivier2016" data-cite="metivier2016">Métivier et al., 2016</a>; <a class="cite-item" href="#sun2022mlmisfit" data-cite="sun2022mlmisfit">Sun &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#alfarhan2026timeshift" data-cite="alfarhan2026timeshift">Alfarhan et al., 2026</a>; <a class="cite-item" href="#shao2026scfwi" data-cite="shao2026scfwi">Huo et al., 2026</a>; <a class="cite-item" href="#saad2026siamesefit" data-cite="saad2026siamesefit">Saad &amp; Alkhalifah, 2026</a>)</span>.</p>
+        <h4>Learned priors and regularization</h4>
+        <p>A network trained on plausible velocity models acts as a regularizer or prior that pulls the solution toward realistic structure <span class="cite-list" data-cite-list="tag=learned+prior">(<a class="cite-item" href="#li2021targetoriented" data-cite="li2021targetoriented">Li et al., 2021</a>; <a class="cite-item" href="#li2022targetlapse" data-cite="li2022targetlapse">Li &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#taufik2024learned" data-cite="taufik2024learned">Taufik et al., 2024</a>; <a class="cite-item" href="#du2025wgan" data-cite="du2025wgan">Du &amp; Wang, 2025</a>; <a class="cite-item" href="#taufik2025wavenumber" data-cite="taufik2025wavenumber">Taufik &amp; Alkhalifah, 2025</a>; <a class="cite-item" href="#elmeliegy2026vae" data-cite="elmeliegy2026vae">Elmeliegy et al., 2026</a>; <a class="cite-item" href="#li2026co2" data-cite="li2026co2">Li et al., 2026a</a>; <a class="cite-item" href="#siahkoohi2026memorization" data-cite="siahkoohi2026memorization">Siahkoohi &amp; Sabeddu, 2026</a>)</span>. Several recent works use diffusion models for this <span class="cite-list" data-cite-list="id=taufik2024learned,taufik2025wavenumber">(<a class="cite-item" href="#taufik2024learned" data-cite="taufik2024learned">Taufik et al., 2024</a>; <a class="cite-item" href="#taufik2025wavenumber" data-cite="taufik2025wavenumber">Taufik &amp; Alkhalifah, 2025</a>)</span>.</p>
+        <h4>Uncertainty quantification</h4>
+        <p>Instead of a single best-fitting model, these methods estimate a distribution of plausible models, for example with Bayesian neural networks or variational inference <span class="cite-list" data-cite-list="tag=uncertainty">(<a class="cite-item" href="#zhu2022integrating" data-cite="zhu2022integrating">Zhu et al., 2022</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#yin2025wiser" data-cite="yin2025wiser">Yin et al., 2025</a>; <a class="cite-item" href="#elmeliegy2026vae" data-cite="elmeliegy2026vae">Elmeliegy et al., 2026</a>; <a class="cite-item" href="#li2026co2" data-cite="li2026co2">Li et al., 2026a</a>; <a class="cite-item" href="#um2026joint3d" data-cite="um2026joint3d">Um et al., 2026</a>)</span>.</p>
+        <h4>Multiparameter inversion</h4>
+        <p>Elastic FWI estimates several properties at once, such as P- and S-wave velocities and density. The parameters are coupled in the data, so an error in one can leak into another, a problem known as crosstalk (see <a href="#open-problems">open problems</a>). Deep-learning work on the multiparameter case: <span class="cite-list" data-cite-list="tag=multiparameter group=survey | tag=multiparameter group=ml-native">(<a class="cite-item" href="#li2022targetlapse" data-cite="li2022targetlapse">Li &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#feng2023efwi" data-cite="feng2023efwi">Feng et al., 2023</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#taufik2024learned" data-cite="taufik2024learned">Taufik et al., 2024</a>; <a class="cite-item" href="#du2025wgan" data-cite="du2025wgan">Du &amp; Wang, 2025</a>; <a class="cite-item" href="#taufik2025wavenumber" data-cite="taufik2025wavenumber">Taufik &amp; Alkhalifah, 2025</a>; <a class="cite-item" href="#wu2025selfsup" data-cite="wu2025selfsup">Wu et al., 2025</a>; <a class="cite-item" href="#huo2026cnnmmi" data-cite="huo2026cnnmmi">Li et al., 2026c</a>; <a class="cite-item" href="#qu2026piedd" data-cite="qu2026piedd">Niu et al., 2026b</a>; <a class="cite-item" href="#han2026kan" data-cite="han2026kan">Wu et al., 2026</a>)</span>.</p>
+        <h4>Benchmarks</h4>
+        <p>Shared synthetic datasets make learned methods comparable, and they also define the geology those methods are trained and tested on <span class="cite-list" data-cite-list="tag=benchmark">(<a class="cite-item" href="#deng2022openfwi" data-cite="deng2022openfwi">Deng et al., 2022</a>; <a class="cite-item" href="#feng2023efwi" data-cite="feng2023efwi">Feng et al., 2023</a>; <a class="cite-item" href="#geofwi2026" data-cite="geofwi2026">Li et al., 2026b</a>; <a class="cite-item" href="#liu2026reparam" data-cite="liu2026reparam">Liu et al., 2026</a>)</span>.</p>
 
-        <p>Where is the field heading? The <a href="#open-problems">open problems</a> page collects the gaps these methods still leave.</p>
+        <p>Where is the field heading? The <a href="#open-problems">open problems</a> section collects the gaps these methods still leave.</p>
       </div>
     </details>
     <details class="section" id="research-landscape">
       <summary><h2 class="section-title">Research landscape</h2><span class="section-sub">Mapping the field</span></summary>
       <div class="section-body">
-        <p class="placeholder">This module is under construction.</p>
+        <p class="lede">Every paper in the author's working bibliography on one timeline, filterable by topic.</p>
+        <p>The map combines three sets of references. The first is classical FWI. The second is a preliminary, non-systematic survey of 16 deep-learning FWI papers from 2021 to 2026, grouped by where the network enters the inversion: generating the model, comparing the data, or acting as a prior. The third is machine-learning-oriented work on the problem, such as learned misfits, diffusion priors, neural operators and benchmark datasets. Topic tags are derived from each paper's title by fixed keyword rules. Select a point or a list entry for details; links go to the publisher or to arXiv.</p>
+        <section class="demo wide" id="landscape" aria-labelledby="ls-title">
+          <h4 id="ls-title">Explore the bibliography</h4>
+          <div class="tag-filter" role="group" aria-label="Filter by topic" data-role="filters"></div>
+          <p class="demo-status" data-role="count" aria-live="polite"></p>
+          <div data-role="chart"></div>
+          <ul class="chart-legend" data-role="legend"></ul>
+          <div class="paper-detail" data-role="detail" aria-live="polite"><p>Select a paper to see its details.</p></div>
+          <h5 class="paper-list-title">Papers shown</h5>
+          <ul class="paper-list" data-role="list"></ul>
+        </section>
       </div>
     </details>
     <details class="section" id="open-problems">
       <summary><h2 class="section-title">Open problems</h2><span class="section-sub">Where the field is headed</span></summary>
       <div class="section-body">
-        <p class="placeholder">This module is under construction.</p>
+        <p class="lede">The difficulties from the earlier sections are also where current research concentrates. Each card lists the work in the bibliography whose titles address it.</p>
+        <div class="problem-cards">
+          <article class="problem-card">
+            <h3>Cycle-skipping and the starting model</h3>
+            <p>Least-squares waveform misfits have local minima whenever predicted arrivals are more than half a period off, so FWI depends on a good starting model and on low frequencies <a class="cite" href="#virieux2009" data-cite="virieux2009">(Virieux &amp; Operto, 2009)</a>. The <a href="#inverse-problem">inverse-problem demos</a> show both effects. Moving from low to high frequencies is the classic remedy <a class="cite" href="#bunks1995" data-cite="bunks1995">(Bunks et al., 1995)</a>. Other approaches change the misfit itself.</p>
+            <p class="card-refs">In the bibliography: <span class="cite-list" data-cite-list="tag=cycle-skipping | tag=misfit+function">(<a class="cite-item" href="#metivier2016" data-cite="metivier2016">Métivier et al., 2016</a>; <a class="cite-item" href="#engquist2022" data-cite="engquist2022">Engquist &amp; Yang, 2022</a>; <a class="cite-item" href="#sun2022mlmisfit" data-cite="sun2022mlmisfit">Sun &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#alfarhan2026timeshift" data-cite="alfarhan2026timeshift">Alfarhan et al., 2026</a>; <a class="cite-item" href="#shao2026scfwi" data-cite="shao2026scfwi">Huo et al., 2026</a>; <a class="cite-item" href="#saad2026siamesefit" data-cite="saad2026siamesefit">Saad &amp; Alkhalifah, 2026</a>)</span></p>
+          </article>
+          <article class="problem-card">
+            <h3>Crosstalk between parameters</h3>
+            <p>When several properties are inverted together, their effects on the data overlap, and an error in one parameter can be absorbed by another <a class="cite" href="#operto2013" data-cite="operto2013">(Operto et al., 2013)</a>. It can even leak between unknowns at different locations <a class="cite" href="#keating2020" data-cite="keating2020">(Keating &amp; Innanen, 2020)</a>.</p>
+            <p class="card-refs">Deep-learning work on multiparameter inversion: <span class="cite-list" data-cite-list="tag=multiparameter group=survey | tag=multiparameter group=ml-native">(<a class="cite-item" href="#li2022targetlapse" data-cite="li2022targetlapse">Li &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#feng2023efwi" data-cite="feng2023efwi">Feng et al., 2023</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#taufik2024learned" data-cite="taufik2024learned">Taufik et al., 2024</a>; <a class="cite-item" href="#du2025wgan" data-cite="du2025wgan">Du &amp; Wang, 2025</a>; <a class="cite-item" href="#taufik2025wavenumber" data-cite="taufik2025wavenumber">Taufik &amp; Alkhalifah, 2025</a>; <a class="cite-item" href="#wu2025selfsup" data-cite="wu2025selfsup">Wu et al., 2025</a>; <a class="cite-item" href="#huo2026cnnmmi" data-cite="huo2026cnnmmi">Li et al., 2026c</a>; <a class="cite-item" href="#qu2026piedd" data-cite="qu2026piedd">Niu et al., 2026b</a>; <a class="cite-item" href="#han2026kan" data-cite="han2026kan">Wu et al., 2026</a>)</span></p>
+          </article>
+          <article class="problem-card">
+            <h3>Generalization to unfamiliar geology</h3>
+            <p>A network can only reproduce the kinds of structure it was trained on, as the <a href="#deep-learning">deep-learning experiment</a> on this page shows with a slow lens the network never saw. The synthetic benchmark datasets used for training and testing therefore shape what a learned method can recover.</p>
+            <p class="card-refs">Benchmarks in the bibliography: <span class="cite-list" data-cite-list="tag=benchmark">(<a class="cite-item" href="#deng2022openfwi" data-cite="deng2022openfwi">Deng et al., 2022</a>; <a class="cite-item" href="#feng2023efwi" data-cite="feng2023efwi">Feng et al., 2023</a>; <a class="cite-item" href="#geofwi2026" data-cite="geofwi2026">Li et al., 2026b</a>; <a class="cite-item" href="#liu2026reparam" data-cite="liu2026reparam">Liu et al., 2026</a>)</span></p>
+          </article>
+          <article class="problem-card">
+            <h3>Uncertainty</h3>
+            <p>A single best-fitting model hides how well each region is constrained. The <a href="#inverse-problem">inversion demos</a> show that some parts of a model are barely illuminated. Estimating a distribution of plausible models instead, and checking that its spread is trustworthy, is an active direction.</p>
+            <p class="card-refs">In the bibliography: <span class="cite-list" data-cite-list="tag=uncertainty">(<a class="cite-item" href="#zhu2022integrating" data-cite="zhu2022integrating">Zhu et al., 2022</a>; <a class="cite-item" href="#zhang2023eifwi" data-cite="zhang2023eifwi">Zhang et al., 2023</a>; <a class="cite-item" href="#yin2025wiser" data-cite="yin2025wiser">Yin et al., 2025</a>; <a class="cite-item" href="#elmeliegy2026vae" data-cite="elmeliegy2026vae">Elmeliegy et al., 2026</a>; <a class="cite-item" href="#li2026co2" data-cite="li2026co2">Li et al., 2026a</a>; <a class="cite-item" href="#um2026joint3d" data-cite="um2026joint3d">Um et al., 2026</a>)</span></p>
+          </article>
+          <article class="problem-card">
+            <h3>Time-lapse monitoring</h3>
+            <p>Repeated surveys over the same area aim to image changes, for example in a reservoir or a CO₂ storage site. The changes of interest are often small compared with the model itself, which makes them easy to confuse with inversion errors.</p>
+            <p class="card-refs">In the bibliography: <span class="cite-list" data-cite-list="tag=time-lapse">(<a class="cite-item" href="#li2021targetoriented" data-cite="li2021targetoriented">Li et al., 2021</a>; <a class="cite-item" href="#li2022targetlapse" data-cite="li2022targetlapse">Li &amp; Alkhalifah, 2022</a>; <a class="cite-item" href="#li2026co2" data-cite="li2026co2">Li et al., 2026a</a>)</span></p>
+          </article>
+        </div>
       </div>
     </details>
     <details class="section" id="references">
       <summary><h2 class="section-title">References</h2><span class="section-sub">Every source cited on this page</span></summary>
       <div class="section-body">
         <p class="lede">Every source cited on this site, generated automatically from the citations used on each page.</p>
-        <!-- references:start (generated by scripts/build-references.js; do not edit) -->
+        <!-- references:start (generated by scripts/build-page.js; do not edit) -->
         <ol class="bibliography">
+          <li id="alfarhan2026timeshift">
+            Alfarhan, M., Chen, F., Turkiyyah, G., Keyes, D., Vasconcelos, I., Ravasi, M. (2026). A deep learning-based time shift objective function for full waveform inversion. <em>Geophysical Prospecting</em> 74(3), e70160. <a href="https://doi.org/10.1111/1365-2478.70160">doi:10.1111/1365-2478.70160</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
           <li id="bunks1995">
             Bunks, C., Saleck, F. M., Zaleski, S., Chavent, G. (1995). Multiscale seismic waveform inversion. <em>Geophysics</em> 60(5), 1457–1473. <a href="https://doi.org/10.1190/1.1443880">doi:10.1190/1.1443880</a>
-            <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a></span>
+            <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a>, <a href="#open-problems">Open problems</a></span>
           </li>
           <li id="cerjan1985">
             Cerjan, C., Kosloff, D., Kosloff, R., Reshef, M. (1985). A nonreflecting boundary condition for discrete acoustic and elastic wave equations. <em>Geophysics</em> 50(4), 705–708. <a href="https://doi.org/10.1190/1.1441945">doi:10.1190/1.1441945</a>
             <span class="cited-on">Cited in: <a href="#forward-modeling">Forward modeling</a></span>
           </li>
+          <li id="deng2022openfwi">
+            Deng, C., Feng, S., Wang, H., Zhang, X., Jin, P., Feng, Y., Zeng, Q., Chen, Y., Lin, Y. (2022). OpenFWI: Large-scale multi-structural benchmark datasets for full waveform inversion. <em>Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track</em> 35, 6007–6020. <a href="https://doi.org/10.52202/068431-0435">doi:10.52202/068431-0435</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="du2025wgan">
+            Du, J., Wang, W. (2025). WGAN-regularized elastic full waveform inversion for petrophysical properties. <em>IEEE Transactions on Geoscience and Remote Sensing</em> 63, 1–14. <a href="https://doi.org/10.1109/TGRS.2025.3605583">doi:10.1109/TGRS.2025.3605583</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="elmeliegy2026vae">
+            Elmeliegy, A., Sen, M. K., Dhara, A., Harding, J., Yoon, H. (2026). Physics-constrained variational autoencoder for uncertainty quantification of full waveform inversion. <em>Journal of Geophysical Research: Machine Learning and Computation</em> 3(5), e2026JH001389. <a href="https://doi.org/10.1029/2026JH001389">doi:10.1029/2026JH001389</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="engquist2022">
+            Engquist, B., Yang, Y. (2022). Optimal transport based seismic inversion: Beyond cycle skipping. <em>Communications on Pure and Applied Mathematics</em> 75(10), 2201–2244. <a href="https://doi.org/10.1002/cpa.21990">doi:10.1002/cpa.21990</a>
+            <span class="cited-on">Cited in: <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="feng2023efwi">
+            Feng, S., Wang, H., Deng, C., Feng, Y., Liu, Y., Zhu, M., Jin, P., Chen, Y., Lin, Y. (2023). 𝔼^FWI: Multiparameter benchmark datasets for elastic full waveform inversion of geophysical properties. <em>Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track</em> 36, 23701–23713. <a href="https://doi.org/10.52202/075280-1029">doi:10.52202/075280-1029</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="huang2025fnofwi">
+            Huang, X., Wang, F., Alkhalifah, T. (2025). Physics-informed waveform inversion using pretrained wavefield neural operators. <em>IEEE Transactions on Geoscience and Remote Sensing</em>. <a href="https://doi.org/10.1109/TGRS.2025.3624025">doi:10.1109/TGRS.2025.3624025</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a></span>
+          </li>
+          <li id="shao2026scfwi">
+            Huo, K., Shao, G., Hu, J., Chang, W., Wang, P. (2026). Feature-data collaborative inversion: A Siamese convolutional neural network method for shallow-subsurface EFWI. <em>Artificial Intelligence in Geosciences</em> 7(3), 100250. <a href="https://doi.org/10.1016/j.aiig.2026.100250">doi:10.1016/j.aiig.2026.100250</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="wu2026fourier">
+            Kang, B., Chen, R., Yang, K., Li, M., Wu, B. (2026). Implicit full waveform inversion with adaptive Fourier frequency bases learning. <em>Geophysical Journal International</em> 244(1), ggaf404. <a href="https://doi.org/10.1093/gji/ggaf404">doi:10.1093/gji/ggaf404</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a></span>
+          </li>
+          <li id="keating2020">
+            Keating, S., Innanen, K. A. (2020). Parameter crosstalk and leakage between spatially separated unknowns in viscoelastic full-waveform inversion. <em>Geophysics</em> 85(4), R397–R408. <a href="https://doi.org/10.1190/GEO2019-0370.1">doi:10.1190/GEO2019-0370.1</a>
+            <span class="cited-on">Cited in: <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="geofwi2026">
+            Li, C., Shen, Y., Fomel, S., Waheed, U. B., Savvaidis, A., Chen, Y. (2026b). GeoFWI: A large velocity model data set for benchmarking full waveform inversion using deep learning. <em>Journal of Geophysical Research: Machine Learning and Computation</em> 3(2), e2025JH001037. <a href="https://doi.org/10.1029/2025JH001037">doi:10.1029/2025JH001037</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="li2026co2">
+            Li, H., Wang, N., Durlofsky, L. J., Biondi, B. L. (2026a). Bayesian full-waveform monitoring of CO₂ storage with fluid-flow priors via generative modeling. <em>Journal of Geophysical Research: Machine Learning and Computation</em> 3(3), e2025JH001190. <a href="https://doi.org/10.1029/2025JH001190">doi:10.1029/2025JH001190</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="huo2026cnnmmi">
+            Li, W., Zhuo, X., Huo, S. (2026c). Progressive self-supervised inversion with multiscale strategies for resolving multiparameter crosstalk in a marine data case. <em>IEEE Transactions on Geoscience and Remote Sensing</em> 64, 5908515. <a href="https://doi.org/10.1109/TGRS.2026.3682202">doi:10.1109/TGRS.2026.3682202</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="li2021targetoriented">
+            Li, Y., Alkhalifah, T., Guo, Q. (2021). Target-oriented time-lapse waveform inversion using deep learning-assisted regularization. <em>Geophysics</em> 86(4), R485–R495. <a href="https://doi.org/10.1190/geo2020-0383.1">doi:10.1190/geo2020-0383.1</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="li2022targetlapse">
+            Li, Y., Alkhalifah, T. (2022). Target-oriented time-lapse elastic full-waveform inversion constrained by deep learning-based prior model. <em>IEEE Transactions on Geoscience and Remote Sensing</em> 60, 1–12. <a href="https://doi.org/10.1109/TGRS.2022.3186028">doi:10.1109/TGRS.2022.3186028</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="liu2026reparam">
+            Liu, F., Li, Y.-X., Su, R., Huang, J.-P., Bai, L. (2026). Deep reparameterization for full waveform inversion: Architecture benchmarking, robust inversion, and multiphysics extension. <em>Petroleum Science</em> 23(4), 1890–1907. <a href="https://doi.org/10.1016/j.petsci.2025.12.027">doi:10.1016/j.petsci.2025.12.027</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="metivier2016">
+            Métivier, L., Brossier, R., Mérigot, Q., Oudet, E., Virieux, J. (2016). Measuring the misfit between seismograms using an optimal transport distance: application to full waveform inversion. <em>Geophysical Journal International</em> 205(1), 345–377. <a href="https://doi.org/10.1093/gji/ggw014">doi:10.1093/gji/ggw014</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="qu2026axpcae">
+            Niu, Y., Qu, Y., Li, Z. (2026a). A physics-constrained autoencoder for full-waveform inversion using axial self-attention. <em>Journal of Seismic Exploration</em> 35(1), 269. <a href="https://doi.org/10.36922/jse025480119">doi:10.36922/jse025480119</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a></span>
+          </li>
+          <li id="qu2026piedd">
+            Niu, Y., Qu, Y., Li, Z. (2026b). Initial-model-free elastic full-waveform inversion using a physics-informed encoder–dual–decoder network. <em>Journal of Applied Geophysics</em> 251, 106272. <a href="https://doi.org/10.1016/j.jappgeo.2026.106272">doi:10.1016/j.jappgeo.2026.106272</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="operto2013">
+            Operto, S., Gholami, Y., Prieux, V., Ribodetti, A., Brossier, R., Métivier, L., Virieux, J. (2013). A guided tour of multiparameter full-waveform inversion with multicomponent data: From theory to practice. <em>The Leading Edge</em> 32(9), 1040–1054. <a href="https://doi.org/10.1190/tle32091040.1">doi:10.1190/tle32091040.1</a>
+            <span class="cited-on">Cited in: <a href="#open-problems">Open problems</a></span>
+          </li>
           <li id="plessix2006">
             Plessix, R.-E. (2006). A review of the adjoint-state method for computing the gradient of a functional with geophysical applications. <em>Geophysical Journal International</em> 167(2), 495–503. <a href="https://doi.org/10.1111/j.1365-246X.2006.02978.x">doi:10.1111/j.1365-246X.2006.02978.x</a>
             <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a></span>
+          </li>
+          <li id="saad2026siamesefit">
+            Saad, O. M., Alkhalifah, T. (2026). SiameseFit: Latent seismic data comparison for enhanced full waveform inversion and cycle-skipping mitigation. <em>Geophysical Prospecting</em> 74, e70203. <a href="https://doi.org/10.1111/1365-2478.70203">doi:10.1111/1365-2478.70203</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="siahkoohi2026memorization">
+            Siahkoohi, A., Sabeddu, D. (2026). On the role of memorization in learned priors for geophysical inverse problems. <em>arXiv preprint arXiv:2603.19629</em>. <a href="https://arxiv.org/abs/2603.19629">link</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a></span>
+          </li>
+          <li id="sun2022mlmisfit">
+            Sun, B., Alkhalifah, T. (2022). ML-misfit: A neural network formulation of the misfit function for full-waveform inversion. <em>Frontiers in Earth Science</em> 10, 1011825. <a href="https://doi.org/10.3389/feart.2022.1011825">doi:10.3389/feart.2022.1011825</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="sun2023implicit">
+            Sun, J., Innanen, K., Zhang, T., Trad, D. (2023). Implicit seismic full waveform inversion with deep neural representation. <em>Journal of Geophysical Research: Solid Earth</em> 128(3). <a href="https://doi.org/10.1029/2022JB025964">doi:10.1029/2022JB025964</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a></span>
           </li>
           <li id="tarantola1984">
             Tarantola, A. (1984). Inversion of seismic reflection data in the acoustic approximation. <em>Geophysics</em> 49(8), 1259–1266. <a href="https://doi.org/10.1190/1.1441754">doi:10.1190/1.1441754</a>
             <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a></span>
           </li>
+          <li id="taufik2024learned">
+            Taufik, M. H., Wang, F., Alkhalifah, T. (2024). Learned regularizations for multi-parameter elastic full waveform inversion using diffusion models. <em>Journal of Geophysical Research: Machine Learning and Computation</em> 1(1), e2024JH000125. <a href="https://doi.org/10.1029/2024JH000125">doi:10.1029/2024JH000125</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="taufik2025wavenumber">
+            Taufik, M. H., Alkhalifah, T. (2025). Wavenumber-aware diffusion sampling to regularize multiparameter elastic full waveform inversion. <em>Geophysical Journal International</em> 240(2), 1215–1233. <a href="https://doi.org/10.1093/gji/ggae437">doi:10.1093/gji/ggae437</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="um2026joint3d">
+            Um, E. S., Alumbaugh, D., Wang, H., Lin, Y. (2026). 3D deep learning joint inversion of active seismic full waveform and passive seismic traveltime data for reservoir imaging and uncertainty quantification. <em>Geophysical Prospecting</em> 74(1), e70126. <a href="https://doi.org/10.1111/1365-2478.70126">doi:10.1111/1365-2478.70126</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
           <li id="virieux2009">
             Virieux, J., Operto, S. (2009). An overview of full-waveform inversion in exploration geophysics. <em>Geophysics</em> 74(6), WCC1–WCC26. <a href="https://doi.org/10.1190/1.3238367">doi:10.1190/1.3238367</a>
-            <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a></span>
+            <span class="cited-on">Cited in: <a href="#inverse-problem">The inverse problem</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="wang2026metaifwi">
+            Wang, Z., Cheng, S., Mao, W., Ouyang, W., Tang, H. (2026). Meta-learning-enhanced implicit full waveform inversion. <em>arXiv preprint arXiv:2604.26938</em>. <a href="https://arxiv.org/abs/2604.26938">link</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a></span>
+          </li>
+          <li id="han2026kan">
+            Wu, F., Li, Y., Fu, Z., Han, B., Chen, Y. (2026). High-resolution elastic full-waveform inversion using dual-channel CNN and Kolmogorov–Arnold network. <em>Journal of Applied Geophysics</em> 246, 106095. <a href="https://doi.org/10.1016/j.jappgeo.2026.106095">doi:10.1016/j.jappgeo.2026.106095</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="wu2025selfsup">
+            Wu, Y., Wang, W., Wang, Y., McMechan, G. A. (2025). Deep learning-based self-supervised multiparameter inversion. <em>Geophysical Journal International</em> 243(2), ggaf332. <a href="https://doi.org/10.1093/gji/ggaf332">doi:10.1093/gji/ggaf332</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="yin2025wiser">
+            Yin, Z., Orozco, R., Herrmann, F. J. (2025). WISER: Multimodal variational inference for full-waveform inversion without dimensionality reduction. <em>Geophysics</em> 90(2), A1–A7. <a href="https://doi.org/10.1190/geo2024-0483.1">doi:10.1190/geo2024-0483.1</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="zhang2023eifwi">
+            Zhang, T., Sun, J., Trad, D., Innanen, K. (2023). Multilayer perceptron and Bayesian neural network-based elastic implicit full waveform inversion. <em>IEEE Transactions on Geoscience and Remote Sensing</em> 61, 1–16. <a href="https://doi.org/10.1109/TGRS.2023.3265657">doi:10.1109/TGRS.2023.3265657</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
+          </li>
+          <li id="zhu2022integrating">
+            Zhu, W., Xu, K., Darve, E., Biondi, B., Beroza, G. C. (2022). Integrating deep neural networks with full-waveform inversion: Reparameterization, regularization, and uncertainty quantification. <em>Geophysics</em> 87(1), R93–R109. <a href="https://doi.org/10.1190/geo2020-0933.1">doi:10.1190/geo2020-0933.1</a>
+            <span class="cited-on">Cited in: <a href="#deep-learning">Enter deep learning</a>, <a href="#open-problems">Open problems</a></span>
           </li>
         </ol>
         <!-- references:end -->
@@ -372,5 +554,7 @@
   <script src="assets/js/inverse-demo.js" defer></script>
   <script src="assets/data/dl-comparison.js" defer></script>
   <script src="assets/js/dl-demo.js" defer></script>
+  <script src="assets/data/literature.js" defer></script>
+  <script src="assets/js/landscape.js" defer></script>
 </body>
 </html>

@@ -4,15 +4,22 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { render, loadReferences, collectCitations } = require('../scripts/build-references.js');
+const { render, loadReferences, collectCitations } = require('../scripts/build-page.js');
 
-test('every citation on the site resolves to a reference entry', () => {
+const INDEX = path.join(__dirname, '..', 'index.html');
+
+test('every citation on the page resolves to a reference entry', () => {
   const refs = loadReferences();
-  const missing = Array.from(collectCitations().keys()).filter((id) => !refs.has(id));
-  assert.deepEqual(missing, []);
+  const cited = Array.from(collectCitations(fs.readFileSync(INDEX, 'utf8')).keys());
+  assert.ok(cited.length > 0);
+  assert.deepEqual(cited.filter((id) => !refs.has(id)), []);
 });
 
-test('the bibliography in index.html is up to date with the citations used', () => {
-  const current = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  assert.equal(render(), current, 'run: node scripts/build-references.js');
+test('generated parts of index.html are up to date', () => {
+  assert.equal(render(), fs.readFileSync(INDEX, 'utf8'), 'run: node scripts/build-page.js');
+});
+
+test('citation labels are unique', () => {
+  const labels = Array.from(loadReferences().values()).map((r) => r.label);
+  assert.equal(new Set(labels).size, labels.length);
 });

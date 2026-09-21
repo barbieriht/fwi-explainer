@@ -10,7 +10,7 @@ problems and references. Each interactive demo starts only when its section
 is opened, and any section or reference can be linked directly
 (e.g. `index.html#inverse-problem`).
 
-> Status: in progress. Forward Modeling, The Inverse Problem and the Deep Learning comparison are live; the literature-driven modules are next.
+> Status: all sections are live; polishing is in progress.
 
 ## Run locally
 
@@ -32,19 +32,34 @@ finite differences to within 1%). No dependencies to install; Node 18+.
 
 ## Content pipeline
 
-Citations are links with a `data-cite="id"` attribute. The References
-section is generated from them and from the reference data in `assets/data/`,
-noting which section cites each entry:
+The literature on the page comes from the author's thesis bibliography, never
+from hand-typed entries:
 
 ```sh
-node scripts/build-references.js          # regenerate the bibliography in index.html
-node scripts/build-references.js --check  # fail if it is out of date
+# 1. Import the corpus (classical FWI, the 16-paper deep-learning FWI survey,
+#    and the machine-learning-oriented line) from the thesis .bib
+node scripts/import-literature.js "/path/to/Overleaf Project/references.bib"
+
+# 2. Fill the generated parts of index.html
+node scripts/build-page.js          # rewrite
+node scripts/build-page.js --check  # fail if out of date (also a test)
 ```
 
-`assets/data/foundational-references.json` holds textbook-level references
-(metadata checked against Crossref). The author's literature corpus will be
-added as `assets/data/literature.json`. A test fails if any page cites an id
-that is not in the data.
+- `import-literature.js` copies bibliographic fields only (the .bib's working
+  comments are never read), marks entries with a `% VERIFY` note as not yet
+  verified, and derives topic tags from titles with explicit keyword rules.
+  It writes `assets/data/literature.json` and a `literature.js` twin, so the
+  page also works when opened from disk.
+- In `index.html`, prose is hand-written. Lists of papers are written as
+  `<span class="cite-list" data-cite-list="tag=uncertainty">` and inline
+  citations as `<a class="cite" data-cite="id">`. `build-page.js` fills
+  both from the data, then generates the References section, listing
+  every cited entry and the sections citing it.
+- `assets/data/foundational-references.json` holds the few textbook
+  references that are not in the thesis bibliography.
+
+Tests fail if a citation does not resolve, if a tag does not follow from its
+title, or if `index.html` is out of date.
 
 ## Deep-learning comparison (offline)
 
