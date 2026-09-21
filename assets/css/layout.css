@@ -187,6 +187,18 @@ details.section > summary:focus-visible { outline: 2px solid var(--accent); outl
   width: 10px; height: 10px; border-top: 0; background: currentColor;
 }
 .chart-legend li.legend-early::before, .chart-legend li.legend-late::before { border-radius: 50%; }
+/* Reading list scrolls inside its own box; shadows hint at more content above/below. */
+.reading-scroll {
+  max-height: 420px; overflow-y: auto; overscroll-behavior: contain;
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 12px 4px 4px;
+  background:
+    linear-gradient(var(--bg) 30%, transparent) top / 100% 24px no-repeat local,
+    linear-gradient(transparent, var(--bg) 70%) bottom / 100% 24px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.18), transparent) top / 100% 10px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.18), transparent) bottom / 100% 10px no-repeat scroll,
+    var(--bg);
+}
+.reading-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .reading-list { padding-left: 1.6em; }
 .reading-list li { margin-bottom: 10px; }
 .reading-meta { display: block; font-size: 0.85rem; color: var(--text-muted); }

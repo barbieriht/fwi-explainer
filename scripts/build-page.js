@@ -37,6 +37,7 @@ const PAGES = [
     file: 'index.html', lang: 'en', locale: 'en-US', citedIn: 'Cited in',
     readingsPending: 'The curated list is being reviewed and will appear here soon.',
     citationCount: '{n} citations',
+    readingsLabel: 'Reading list, ranked by citations (scrollable)',
     citationSource: 'Citation counts: {source}, retrieved {date}.',
     groups: {
       fundamentals: 'Foundations',
@@ -51,6 +52,7 @@ const PAGES = [
     file: 'index.pt.html', lang: 'pt', locale: 'pt-BR', citedIn: 'Citado em',
     readingsPending: 'A lista curada está em revisão e aparecerá aqui em breve.',
     citationCount: '{n} citações',
+    readingsLabel: 'Lista de leituras, ordenada por citações (com rolagem)',
     citationSource: 'Contagem de citações: {source}, consulta em {date}.',
     groups: {
       fundamentals: 'Fundamentos',
@@ -226,7 +228,9 @@ function fillReadings(html, refs, page) {
     });
     const note = page.citationSource.replace('{source}', citations.source)
       .replace('{date}', localDate(citations.retrieved, page.locale));
-    body = '        <ol class="reading-list">\n' + items.join('\n') + '\n        </ol>\n' +
+    // Scrollable box so the page can be read past the list; focusable for keyboard scrolling.
+    body = '        <div class="reading-scroll" role="region" tabindex="0" aria-label="' + escapeHtml(page.readingsLabel) + '">\n' +
+      '        <ol class="reading-list">\n' + items.join('\n') + '\n        </ol>\n        </div>\n' +
       '        <p class="note">' + escapeHtml(note) + '</p>';
   }
   return html.slice(0, start + READINGS_START.length) + '\n' + body + '\n        ' + html.slice(end);
