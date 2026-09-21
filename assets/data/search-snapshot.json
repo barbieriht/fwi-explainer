@@ -69,5 +69,49 @@
       "total": 32,
       "ml": 20
     }
-  ]
+  ],
+  "venues": [
+    {
+      "venue": "Geophysics",
+      "total": 48,
+      "ml": 17
+    },
+    {
+      "venue": "IEEE Transactions on Geoscience and Remote Sensing",
+      "total": 38,
+      "ml": 16
+    },
+    {
+      "venue": "Geophysical Journal International",
+      "total": 29,
+      "ml": 7
+    },
+    {
+      "venue": "SEG Technical Program Expanded Abstracts",
+      "total": 19,
+      "ml": 7
+    },
+    {
+      "venue": "Geophysical Prospecting",
+      "total": 16,
+      "ml": 6
+    },
+    {
+      "venue": "Journal of Applied Geophysics",
+      "total": 10,
+      "ml": 2
+    },
+    {
+      "venue": "Chinese Journal of Geophysics",
+      "total": 6,
+      "ml": 4
+    },
+    {
+      "venue": "Computers and Geosciences",
+      "total": 5,
+      "ml": 1
+    }
+  ],
+  "other_venues": 104,
+  "no_venue": 8
 }

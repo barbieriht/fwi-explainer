@@ -175,6 +175,8 @@ details.section > summary:focus-visible { outline: 2px solid var(--accent); outl
 .bar-ml { fill: var(--series-a); }
 .bar-other { fill: var(--series-muted); }
 .bar rect { stroke: var(--bg); stroke-width: 1; }
+.venue-label { font-size: 12px; fill: var(--text); }
+.venue-count { font-size: 12px; }
 .legend-ml { color: var(--series-a); }
 .legend-other { color: var(--series-muted); }
 .chart-legend li.legend-ml::before, .chart-legend li.legend-other::before {

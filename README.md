@@ -116,7 +116,7 @@ page `group`, the `source` the sentence is based on, `approved`, a written
 `review` of the decision, and one sentence in English and Portuguese that
 restates the paper's abstract. The selection criterion is whether the
 abstract shows the paper is about FWI methods. Approved rows are ranked by
-citation count:
+citations per year since publication:
 
 ```sh
 python3 scripts/update-citations.py   # OpenAlex counts -> content/citations.json

@@ -31,3 +31,13 @@ test('the script twin carries the same snapshot as the JSON', () => {
   new Function('window', read('assets/data/search-snapshot.js'))(window);
   assert.deepEqual(window.FWI_DATA.searchSnapshot, data);
 });
+
+test('venue counts add up and publish only aggregates', () => {
+  const listed = data.venues.reduce((sum, v) => sum + v.total, 0);
+  assert.equal(listed + data.other_venues + data.no_venue, data.studies);
+  for (const v of data.venues) {
+    assert.deepEqual(Object.keys(v).sort(), ['ml', 'total', 'venue']);
+    assert.ok(v.ml <= v.total, v.venue);
+  }
+  for (let i = 1; i < data.venues.length; i++) assert.ok(data.venues[i - 1].total >= data.venues[i].total);
+});

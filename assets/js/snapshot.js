@@ -1,8 +1,9 @@
 /*
  * Search snapshot: aggregate counts from the author's collected studies
  * (assets/data/search-snapshot.js, built by scripts/import-zotero.py).
- * Studies per year, split into those mentioning ML/deep learning and others,
- * plus a one-line summary of how the ML share changed around SPLIT_YEAR.
+ * Studies per year and the most frequent venues, both split into those
+ * mentioning ML/deep learning and others, plus a one-line summary of how the
+ * ML share changed around SPLIT_YEAR.
  */
 (function () {
   'use strict';
@@ -22,6 +23,7 @@
 
     const el = {
       years: root.querySelector('[data-role="years-chart"]'),
+      venues: root.querySelector('[data-role="venues-chart"]'),
       summary: root.querySelector('[data-role="summary"]'),
     };
 
@@ -77,6 +79,60 @@
       });
     }
 
+    // ---------- most frequent venues ----------
+
+    // Horizontal stacked bars. Each venue name sits above its bar and wraps
+    // onto more lines when it does not fit, so it is never clipped.
+    function wrapLabel(text, maxWidth, lineHeight) {
+      const words = text.text().split(/\s+/);
+      text.text(null);
+      let tspan = text.append('tspan').attr('x', 0).attr('dy', 0);
+      let line = [];
+      let lines = 1;
+      words.forEach(function (word) {
+        line.push(word);
+        tspan.text(line.join(' '));
+        if (line.length > 1 && tspan.node().getComputedTextLength() > maxWidth) {
+          line.pop();
+          tspan.text(line.join(' '));
+          line = [word];
+          tspan = text.append('tspan').attr('x', 0).attr('dy', lineHeight).text(word);
+          lines++;
+        }
+      });
+      return lines;
+    }
+
+    function drawVenues() {
+      const width = chartWidth(el.venues);
+      const lineH = 15;
+      const barH = 14;
+      const gap = 12;
+      const m = { top: 4, right: 36, bottom: 4, left: 4 };
+      const rows = data.venues;
+      const innerW = width - m.left - m.right;
+      const x = d3.scaleLinear().domain([0, d3.max(rows, function (r) { return r.total; })]).range([0, innerW]);
+
+      const svg = d3.select(el.venues).append('svg').attr('class', 'chart')
+        .attr('role', 'img').attr('aria-label', t('sn.venuesAria', { n: rows.length }));
+      const g = svg.append('g').attr('transform', 'translate(' + m.left + ',' + m.top + ')');
+      let y = 0;
+      rows.forEach(function (r) {
+        const row = g.append('g').attr('class', 'venue').attr('transform', 'translate(0,' + y + ')');
+        const label = row.append('text').attr('class', 'chart-label venue-label').attr('y', 12).text(r.venue);
+        const lines = wrapLabel(label, width - m.left - m.right, lineH);
+        const bar = row.append('g').attr('class', 'bar').attr('transform', 'translate(0,' + (lines * lineH + 2) + ')');
+        bar.append('rect').attr('class', 'bar-ml').attr('height', barH).attr('width', x(r.ml));
+        bar.append('rect').attr('class', 'bar-other').attr('height', barH)
+          .attr('x', x(r.ml)).attr('width', x(r.total) - x(r.ml));
+        bar.append('text').attr('class', 'chart-label venue-count').attr('y', barH / 2).attr('dy', '0.35em')
+          .attr('x', x(r.total) + 6).text(r.total);
+        row.append('title').text(t('sn.venueTitle', { venue: r.venue, total: r.total, ml: r.ml }));
+        y += lines * lineH + 2 + barH + gap;
+      });
+      svg.attr('viewBox', '0 0 ' + width + ' ' + (y + m.top + m.bottom - gap));
+    }
+
     // ---------- ML share before / after the split ----------
 
     function mlShare() {
@@ -91,6 +147,7 @@
     }
 
     drawYears();
+    drawVenues();
     const ml = mlShare();
     el.summary.textContent = t('sn.summary', {
       n: data.studies, date: localDate(data.snapshot_date), partial: data.partial_year,

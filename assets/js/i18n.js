@@ -65,6 +65,8 @@
       'sn.studies': 'Studies',
       'sn.yearsAria': 'Collected studies per year, split into those that mention machine learning or deep learning and the others.',
       'sn.barTitle': '{year}: {total} studies, {ml} mentioning ML/deep learning',
+      'sn.venuesAria': 'The {n} most frequent journals and proceedings in the collection, split into studies that mention machine learning or deep learning and the others.',
+      'sn.venueTitle': '{venue}: {total} studies, {ml} mentioning ML/deep learning',
       'sn.summary': '{n} unique studies, snapshot of {date}. Mentions of machine learning or deep learning go from {early}% of the studies before {year} to {late}% from {year} on. * {partial} is a partial year.',
 
     },
@@ -126,6 +128,8 @@
       'sn.studies': 'Estudos',
       'sn.yearsAria': 'Estudos reunidos por ano, separados entre os que mencionam machine learning ou deep learning e os demais.',
       'sn.barTitle': '{year}: {total} estudos, {ml} mencionando ML/deep learning',
+      'sn.venuesAria': 'Os {n} periódicos e anais mais frequentes na coleção, separados entre estudos que mencionam machine learning ou deep learning e os demais.',
+      'sn.venueTitle': '{venue}: {total} estudos, {ml} mencionando ML/deep learning',
       'sn.summary': '{n} estudos únicos, retrato de {date}. As menções a machine learning ou deep learning passam de {early}% dos estudos antes de {year} para {late}% a partir de {year}. * {partial} é um ano parcial.',
 
     },

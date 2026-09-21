@@ -12,8 +12,9 @@
  *  2. Inline citations: every <a class="cite" data-cite="id">…</a> gets its
  *     label regenerated from the data, e.g. "(Niu et al., 2026a)".
  *  3. The reading list between the readings markers: rows of
- *     content/readings.csv marked approved=yes, ranked by citation count
- *     (content/citations.json, from scripts/update-citations.py).
+ *     content/readings.csv marked approved=yes, ranked by citations per year
+ *     since publication (content/citations.json, from
+ *     scripts/update-citations.py), so recent papers are not always last.
  *  4. The bibliography between the references markers, listing every cited
  *     entry and the section(s) citing it.
  *
@@ -36,7 +37,7 @@ const PAGES = [
   {
     file: 'index.html', lang: 'en', locale: 'en-US', citedIn: 'Cited in',
     readingsPending: 'The curated list is being reviewed and will appear here soon.',
-    citationCount: '{n} citations',
+    citationCount: '{n} citations, {rate} per year',
     readingsLabel: 'Reading list, ranked by citations (scrollable)',
     citationSource: 'Citation counts: {source}, retrieved {date}.',
     groups: {
@@ -51,7 +52,7 @@ const PAGES = [
   {
     file: 'index.pt.html', lang: 'pt', locale: 'pt-BR', citedIn: 'Citado em',
     readingsPending: 'A lista curada está em revisão e aparecerá aqui em breve.',
-    citationCount: '{n} citações',
+    citationCount: '{n} citações, {rate} por ano',
     readingsLabel: 'Lista de leituras, ordenada por citações (com rolagem)',
     citationSource: 'Contagem de citações: {source}, consulta em {date}.',
     groups: {
@@ -201,13 +202,20 @@ function localDate(iso, locale) {
   return new Date(iso + 'T12:00:00Z').toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-// Approved readings, most cited first (ties: newer first, then by id).
+// Approved readings ranked by citations per year since publication (a paper
+// published in the retrieval year counts as one year); ties: more citations,
+// then newer, then id.
 function rankedReadings(refs, groups, citations) {
+  const retrievedYear = Number(citations.retrieved.slice(0, 4));
   return loadReadings(refs, groups).filter(function (r) { return r.approved === 'yes'; }).map(function (r) {
     const count = citations.cited_by_count[r.id];
     if (!Number.isInteger(count)) throw new Error('citations.json: no count for ' + r.id + '; run scripts/update-citations.py');
-    return Object.assign({ citations: count, year: refs.get(r.id).year }, r);
-  }).sort(function (a, b) { return b.citations - a.citations || b.year - a.year || a.id.localeCompare(b.id); });
+    const year = refs.get(r.id).year;
+    const years = Math.max(1, retrievedYear - year + 1);
+    return Object.assign({ citations: count, year: year, perYear: count / years }, r);
+  }).sort(function (a, b) {
+    return b.perYear - a.perYear || b.citations - a.citations || b.year - a.year || a.id.localeCompare(b.id);
+  });
 }
 
 function fillReadings(html, refs, page) {
@@ -221,7 +229,8 @@ function fillReadings(html, refs, page) {
     body = '        <p class="placeholder">' + escapeHtml(page.readingsPending) + '</p>';
   } else {
     const items = ranked.map(function (r) {
-      const count = page.citationCount.replace('{n}', r.citations.toLocaleString(page.locale));
+      const count = page.citationCount.replace('{n}', r.citations.toLocaleString(page.locale))
+        .replace('{rate}', r.perYear.toLocaleString(page.locale, { maximumFractionDigits: r.perYear < 10 ? 1 : 0 }));
       return '          <li><a class="cite" href="#' + r.id + '" data-cite="' + r.id + '"></a> ' +
         escapeHtml(r['sentence_' + page.lang]) +
         ' <span class="reading-meta">' + escapeHtml(count) + ' · ' + escapeHtml(page.groups[r.group]) + '</span></li>';
