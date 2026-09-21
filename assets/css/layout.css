@@ -26,8 +26,6 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .site-nav .brand { font-weight: 700; color: var(--text); text-decoration: none; margin-right: auto; }
 
 main { max-width: 1100px; margin: 0 auto; padding: 24px var(--gutter) 48px; }
-main > * { max-width: var(--measure); }
-main > .wide { max-width: none; }
 
 h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); line-height: 1.2; margin: 0.5em 0; }
 .lede { font-size: 1.1rem; color: var(--text-muted); }
@@ -105,11 +103,13 @@ h2 { margin-top: 2em; line-height: 1.25; }
 /* Inverse-problem demos */
 @media (min-width: 760px) {
   .demo-panels.even { grid-template-columns: 1fr 1fr; }
-  .demo-panels.models { grid-template-columns: 1fr 1fr; max-width: 640px; }
+  .demo-panels.models { grid-template-columns: 1fr 1fr; }
+  .narrow { max-width: calc(50% - 8px); }
 }
 .demo canvas[data-role="truth"], .demo canvas[data-role="current"] { aspect-ratio: 1; }
-.narrow { max-width: 312px; }
-.chart-block { margin: 16px 0 0; max-width: 640px; }
+/* Chart keeps a readable size; its caption uses the full width. */
+.chart-block { margin: 16px 0 0; }
+.chart-block > [data-role] { max-width: 640px; }
 .scenario-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .demo-readout { margin: 12px 0 0; padding: 8px 12px; border-radius: 4px; background: var(--bg); min-height: 1.6em; }
 .demo-readout.warning { background: var(--warn-bg); color: var(--warn-text); }
@@ -136,13 +136,12 @@ h2 { margin-top: 2em; line-height: 1.25; }
 .dl-truth { margin: 0; }
 .dl-truth img { border: 1px solid var(--border); border-radius: 4px; }
 .demo button[aria-pressed="true"] { background: var(--accent); color: var(--accent-contrast); }
-.metrics { border-collapse: collapse; margin-top: 16px; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.metrics { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
 .metrics caption { text-align: left; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
 .metrics th, .metrics td { text-align: left; padding: 6px 16px 6px 0; border-bottom: 1px solid var(--border); }
 
 /* Single-page layout: collapsible sections */
 html { scroll-padding-top: 12px; }
-main > details.section, main > .section-tools { max-width: none; }
 .section-tools { display: flex; gap: 8px; margin: 8px 0 20px; }
 .section-tools button {
   font: inherit; font-size: 0.9rem; padding: 4px 12px; border-radius: 4px; cursor: pointer;
@@ -193,7 +192,6 @@ details.section > summary:focus-visible { outline: 2px solid var(--accent); outl
 
 /* Open problems */
 .problem-cards { display: grid; gap: 12px; grid-template-columns: 1fr; margin-top: 16px; }
-@media (min-width: 760px) { .problem-cards { grid-template-columns: 1fr 1fr; } }
 .problem-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 16px 12px; background: var(--bg); }
 .problem-card h3 { margin-top: 12px; font-size: 1.05rem; }
 .card-refs { font-size: 0.9rem; color: var(--text-muted); }

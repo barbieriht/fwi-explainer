@@ -21,7 +21,6 @@
 
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  --measure: 72ch;
   --gutter: 16px;
   --radius: 6px;
 }

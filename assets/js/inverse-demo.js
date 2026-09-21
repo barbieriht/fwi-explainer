@@ -17,7 +17,7 @@
     const num = window.FWI.i18n.num;
     const MAX_ITERATIONS = 30;
     const MULTISCALE_SWITCH = 10; // iterations at low frequency before switching
-    const MODEL_CANVAS_PX = 300;
+    const MODEL_CANVAS_PX = 480;
   const FRAME_BUDGET_MS = 12; // work per animation frame before yielding to the browser
   const ITERATION_DONE = { iterationDone: true };
 
